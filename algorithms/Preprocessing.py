@@ -11,8 +11,9 @@ from sklearn.svm import SVC
 from stability_selection.stability_selection import StabilitySelection
 from Settings import datasets, steps, n_splits, random_states, feature_selectors
 
+
 def process_iteration(iteration, train_index, test_index, selector, random_state, dataset, step, X, y):
-    print(iteration,selector, random_state, dataset, step)
+    print(iteration, selector, random_state, dataset, step)
     if selector == "RFECV":
         feature_selection = RFECV(estimator=SVC(kernel="linear", random_state=random_state),
                                   step=step,
@@ -53,6 +54,7 @@ def process_iteration(iteration, train_index, test_index, selector, random_state
         joblib.dump(feature_selection, model_path)
         print(sum(feature_selection.get_support()), model_path)
 
+
 # Main loop
 for selector in feature_selectors:
     for random_state, dataset, n_split, step in itertools.product(random_states, datasets, n_splits, steps):
@@ -61,5 +63,6 @@ for selector in feature_selectors:
         X = data.iloc[:, :-1].set_index('sample_id')
         y = data.iloc[:, -1].values
 
-        Parallel(n_jobs=-1)(delayed(process_iteration)(iteration, train_index, test_index, selector, random_state, dataset, step, X, y)
-                            for iteration, (train_index, test_index) in enumerate(skf.split(X, y)))
+        Parallel(n_jobs=-1)(
+            delayed(process_iteration)(iteration, train_index, test_index, selector, random_state, dataset, step, X, y)
+            for iteration, (train_index, test_index) in enumerate(skf.split(X, y)))
