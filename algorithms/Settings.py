@@ -1,15 +1,18 @@
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, BaggingClassifier
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, BaggingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 from stability_selection.stability_selection import StabilitySelection
 from sklearn.feature_selection import RFECV
 from sklearn.svm import SVC
 from algorithms.Constants import ALL_name, BTu_name, HeC_name, HFF_name, SPs_name, SSh_name
 
 feature_selectors = [
-    "RFECV",
+    "RFE",
+    # "RFECV",
     # "StabilitySelection"
 ]
 
@@ -37,7 +40,7 @@ random_states = [
 ]
 
 datasets = [
-    # ALL_name,
+    ALL_name,
     BTu_name,
     HeC_name,
     HFF_name,
@@ -58,12 +61,18 @@ classifiers = [
     (SVC(), 'SVC'),
     (ExtraTreesClassifier(n_jobs=-1), 'EXT_TRE'),
     (RandomForestClassifier(n_jobs=-1), 'RND_FST'),
-    (BaggingClassifier(n_jobs=-1), 'BAGGNG')
+    (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
+    (StackingClassifier(
+        estimators=[('rf', RandomForestClassifier(n_jobs=-1)), ('svc', SVC(kernel="linear", probability=True)),
+                    ('dt', DecisionTreeClassifier()), ('mlp', MLPClassifier(max_iter=1000)),
+                    ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
+                    ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
+                    ('knn5', KNeighborsClassifier(n_neighbors=5, p=1))],
+        final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKIN')
 ]
 
 # Parametry poniżej dotyczą Proponowanego Algorytmu
 ALG_amount_of_subtables = [
-    1,
     2,
     3,
     5,

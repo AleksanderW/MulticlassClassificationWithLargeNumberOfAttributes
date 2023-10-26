@@ -3,11 +3,14 @@ from itertools import combinations
 
 import numpy as np
 from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 
 from algorithms.Aggregations import A1_aggr, A2_aggr, A3_aggr, A5_aggr, A6_aggr, A7_aggr, A8_aggr, \
     A9_aggr, A10_aggr
@@ -25,7 +28,7 @@ class ProposedAlgorithm:
         self.aggregation_type = aggregation_type
         self.random_state = random_state
         self.subtable_col_indexes = None
-        self.knn_models = None
+        self.fit_models = None
         self.y_labels = None
         self.dataset = dataset
         self.iteration = iteration
@@ -122,7 +125,7 @@ class ProposedAlgorithm:
 
             if len(importance) < self.amount_of_subtables:
                 split3_features_log(self.dataset, self.iteration, self.amount_of_subtables, self.random_state,
-                                    self.aggregation_type,len(importance))
+                                    self.aggregation_type, len(importance))
                 self.amount_of_subtables = len(importance)
 
             tabs = [[] for _ in range(self.amount_of_subtables)]
@@ -151,18 +154,26 @@ class ProposedAlgorithm:
             2: split_into_subtables2,
             3: split_into_subtables3
         }
+
         split_into_subtables = split_options[self.table_split]
         self.subtable_col_indexes = split_into_subtables()
-        knn_fit_models = []
+        row_fit_models = []
+        models = [
+            RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
+            SVC(kernel="linear", probability=True, random_state=self.random_state),
+            DecisionTreeClassifier(random_state=self.random_state),
+            MLPClassifier(max_iter=1000, random_state=self.random_state),
+            KNeighborsClassifier(n_neighbors=1, p=1),
+            KNeighborsClassifier(n_neighbors=3, p=1),
+            KNeighborsClassifier(n_neighbors=5, p=1)
+        ]
         for i in range(self.amount_of_subtables):
             X_train_subset_split = X_train[:, self.subtable_col_indexes[i]]
-            row_fit_models = []
-            for n in self.kNN_neighbours:
-                knn = KNeighborsClassifier(n_neighbors=n, n_jobs=-1)
-                knn.fit(X_train_subset_split, y_train)
-                row_fit_models.append(knn)
-            knn_fit_models.append(row_fit_models)
-        self.knn_models = knn_fit_models
+
+            for model in models:
+                model.fit(X_train, y_train)
+                row_fit_models.append(model)
+        self.fit_models = row_fit_models
 
     def predict(self, X_test):
         aggregation_functions = {
@@ -173,13 +184,13 @@ class ProposedAlgorithm:
         for i in range(self.amount_of_subtables):
             X_test_subset_split = X_test[:, self.subtable_col_indexes[i]]
             row_predicions = []
-            for model in self.knn_models[i]:
+            for model in self.fit_models[i]:
                 row_predicions.append(model.predict_proba(X_test_subset_split))
             subtables.append(row_predicions)
 
         min_max_array = []
-        for knns in subtables:
-            min_max_array.append(find_min_max_pairs(knns))
+        for subtable in subtables:
+            min_max_array.append(find_min_max_pairs(subtable))
         aggregated = aggregation_functions.get(self.aggregation_type)(min_max_array)
         ordered = orders.get(self.order)(aggregated)
         warning_log(self.dataset, self.iteration, self.amount_of_subtables, self.random_state, self.aggregation_type,
@@ -259,7 +270,7 @@ def split3_features_log(dataset, iteration, subtables, random_state, aggregation
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    alg = ProposedAlgorithm(amount_of_subtables=7, table_split=3)
+    alg = ProposedAlgorithm(amount_of_subtables=7, table_split=2)
     alg.fit(X_train, y_train)
     y_pred = alg.predict(X_test)
     print(accuracy_score(y_pred, y_test))

@@ -4,7 +4,7 @@ import random
 import joblib
 import pandas as pd
 from joblib import Parallel, delayed
-from sklearn.feature_selection import RFECV
+from sklearn.feature_selection import RFECV, RFE
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVC
@@ -27,12 +27,15 @@ for selector in feature_selectors:
             elif selector == "StabilitySelection":
                 feature_selection = StabilitySelection(base_estimator=SVC(kernel="linear", random_state=random_state),
                                                        n_jobs=-1)
+            elif selector == "RFE":
+                feature_selection = RFE(estimator=SVC(kernel="linear", random_state=random_state),
+                                        step=step, n_features_to_select=100)
 
             folder_path = os.path.join("..", ".cache", f"{selector}_models")
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
 
-            if selector == "RFECV":
+            if selector == "RFECV" or selector == "RFE":
                 # nazwabazy_randomstate_step_iteracja
                 file_name = f"{dataset}_{random_state}_{step}_{iteration}.sav"
             elif selector == "StabilitySelection":
@@ -55,4 +58,3 @@ for selector in feature_selectors:
                 feature_selection.fit(X_train_scaled, y_train)
                 joblib.dump(feature_selection, model_path)
                 print(sum(feature_selection.get_support()), model_path)
-
