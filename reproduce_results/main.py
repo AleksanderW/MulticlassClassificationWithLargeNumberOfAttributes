@@ -6,8 +6,8 @@ import pandas as pd
 
 from algorithms.Constants import extract_variables, set_params, check_if_models_exist, create_logs, empty_logs
 from algorithms.Evaluation import evaluate_classifiers
-from algorithms.Proposed_Algorithm import ProposedAlgorithm
-from algorithms.Proposed_Algorithm_Stacking import ProposedStackingAlgorithm
+from algorithms.Pomysl_Algorithm import PomyslAlgorithm
+from algorithms.Proposed_Algorithm_Parallel import ProposedAlgorithmParallel
 from algorithms.Settings import datasets, steps, ALG_amount_of_subtables, ALG_aggregations, n_splits, random_states, \
     classifiers, ALG_orders, ALG_kNN_neighbours, parallel_evaluation, ALG_split_variant, feature_selectors
 
@@ -21,18 +21,24 @@ for selector in feature_selectors:
     for step, n_split, random_state in product(steps, n_splits, random_states):
         clfs_loop = classifiers.copy()
         clfs_loop += [
-            (ProposedStackingAlgorithm(amount_of_subtables=subtab, aggregation_type=agg, knn_neighbours=kNN, order=order,
-                               table_split=table_split, random_state=random_state),
-             f"PROP_ALG_s{subtab}_{agg}_k{kNN}_{order}_{table_split}") for agg, subtab, kNN, order, table_split in
+            (
+                ProposedAlgorithmParallel(amount_of_subtables=subtab, aggregation_type=agg, knn_neighbours=kNN,
+                                          order=order,
+                                          table_split=table_split, random_state=random_state, n_jobs=-1),
+                f"PROP_ALG_s{subtab}_{agg}_k{kNN}_{order}_{table_split}") for agg, subtab, kNN, order, table_split in
             product(ALG_aggregations, ALG_amount_of_subtables, ALG_kNN_neighbours, ALG_orders, ALG_split_variant)]
+        clfs_loop += [
+            (ProposedAlgorithmParallel(aggregation_type=agg, order=order, random_state=random_state, n_jobs=-1),
+             f"POM_ALG_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
         clfs_loop = set_params(clfs_loop, random_state)
 
         for dataset in datasets:
-            if selector == "RFECV":
+            if selector == "RFECV" or selector == "RFE":
                 file_path = op.join(path,
-                                    "{}_RandomState{}_step{}_nsplit{}_{}.xlsx".format(dataset, random_state, step,
-                                                                                      n_split,
-                                                                                      selector))
+                                    "{}_RandomState{}_selector{}_step{}_nsplit{}_{}.xlsx".format(dataset,
+                                                                                                 random_state,selector, step,
+                                                                                                 n_split,
+                                                                                                 selector))
             elif selector == "StabilitySelection":
                 file_path = op.join(path,
                                     "{}_RandomState{}_nsplit{}_{}.xlsx".format(dataset, random_state, n_split,

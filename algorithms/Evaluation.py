@@ -21,7 +21,7 @@ def evaluate_classifiers(clf, name, dataset, n_splits, step, random_state, selec
         scaler.fit(X_train, y_train)
         X_train = scaler.transform(X_train)
 
-        if selector == "RFECV":
+        if selector == "RFECV" or selector == "RFE":
             feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
                                                          f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
         elif selector == "StabilitySelection":

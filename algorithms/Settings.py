@@ -61,6 +61,7 @@ classifiers = [
     (SVC(), 'SVC'),
     (ExtraTreesClassifier(n_jobs=-1), 'EXT_TRE'),
     (RandomForestClassifier(n_jobs=-1), 'RND_FST'),
+    (DecisionTreeClassifier(criterion='entropy'), 'DEC_TRE'),
     (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
     (StackingClassifier(
         estimators=[('rf', RandomForestClassifier(n_jobs=-1)), ('svc', SVC(kernel="linear", probability=True)),

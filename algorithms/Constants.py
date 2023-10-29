@@ -11,13 +11,29 @@ SSh_name = 'SSh_GSE13904'
 
 def extract_variables(text):
     pattern = r'PROP_ALG_s(\w+)_(\w+)_k\[(.+?)\]_(\w+)_(\w+)'
+    pattern2 = r'POM_ALG_(\w+)_(\w+)'
     match = re.search(pattern, text)
+    match2 = re.search(pattern2, text)
     if match:
         return "PROP_ALG", match.group(1), match.group(2), match.group(3), match.group(4), match.group(5)
+    elif match2:
+        return "POM_ALG", "", match2.group(1),  "", match2.group(2), ""
     else:
         return text, '', '', '', '', ''
 
+if __name__ == "__main__":
+    # Example usage:
+    input_text = "'PROP_ALG_s5_A10_k[3, 5, 7]_xuyager_2'"
+    result = extract_variables(input_text)
+    print(result)
 
+    input_text2 = "'POM_ALG_A6_xuyager"
+    result2 = extract_variables(input_text2)
+    print(result2)
+
+    input_text3 = "Invalid_Text"
+    result3 = extract_variables(input_text3)
+    print(result3)
 def set_params(classifiers, random_state):
     table = []
     for clf in classifiers:
@@ -39,7 +55,7 @@ def check_if_models_exist(dataset, random_state, step, selector):
 
     for iteration in range(5):
         model_name = f"{dataset}_{random_state}"
-        if selector == "RFECV":
+        if selector == "RFECV" or selector == "RFE":
             model_name += f"_{step}_{iteration}.sav"
         elif selector == "StabilitySelection":
             model_name += f"_{iteration}.sav"
@@ -51,7 +67,7 @@ def check_if_models_exist(dataset, random_state, step, selector):
         log_message = ""
         for iteration in missing_models:
             log_message += f"Dataset: {dataset}, random_state: {random_state},"
-            if selector == "RFECV":
+            if selector == "RFECV" or selector == "RFE":
                 log_message += f" step: {step},"
             log_message += f" iteration: {iteration}\n"
 
