@@ -72,7 +72,7 @@ class PomyslAlgorithmParallel:
                 delayed(fit_model)(model, X_train, y_train) for model in models
             )
         )
-        self.fit_models = row_fit_models
+        self.fit_models = row_fit_models[0]
 
     def predict(self, X_test):
         aggregation_functions = {
@@ -95,7 +95,7 @@ class PomyslAlgorithmParallel:
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    alg = PomyslAlgorithm()
+    alg = PomyslAlgorithmParallel()
     alg.fit(X_train, y_train)
     y_pred = alg.predict(X_test)
     print(accuracy_score(y_pred, y_test))

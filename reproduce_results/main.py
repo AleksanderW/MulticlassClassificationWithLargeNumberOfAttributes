@@ -6,7 +6,9 @@ import pandas as pd
 
 from algorithms.Constants import extract_variables, set_params, check_if_models_exist, create_logs, empty_logs
 from algorithms.Evaluation import evaluate_classifiers
-from algorithms.Pomysl_Algorithm import PomyslAlgorithm
+from algorithms.Pomysl_Algorithm_GridSearchCV import PomyslAlgorithmGridSearchCV
+from algorithms.Pomysl_Algorithm_Parallel import PomyslAlgorithmParallel
+from algorithms.Proposed_Algorithm_GridSearchCV_Parallel import ProposedAlgorithmParallelGridSearchCV
 from algorithms.Proposed_Algorithm_Parallel import ProposedAlgorithmParallel
 from algorithms.Settings import datasets, steps, ALG_amount_of_subtables, ALG_aggregations, n_splits, random_states, \
     classifiers, ALG_orders, ALG_kNN_neighbours, parallel_evaluation, ALG_split_variant, feature_selectors
@@ -27,16 +29,33 @@ for selector in feature_selectors:
                                           table_split=table_split, random_state=random_state, n_jobs=-1),
                 f"PROP_ALG_s{subtab}_{agg}_k{kNN}_{order}_{table_split}") for agg, subtab, kNN, order, table_split in
             product(ALG_aggregations, ALG_amount_of_subtables, ALG_kNN_neighbours, ALG_orders, ALG_split_variant)]
+
         clfs_loop += [
-            (ProposedAlgorithmParallel(aggregation_type=agg, order=order, random_state=random_state, n_jobs=-1),
+            (
+                ProposedAlgorithmParallelGridSearchCV(amount_of_subtables=subtab, aggregation_type=agg,
+                                                      knn_neighbours=[1, 3, 5],
+                                                      order=order,
+                                                      table_split=table_split, random_state=random_state, n_jobs=-1),
+                f"PROP_ALGgridSearchCV_s{subtab}_{agg}_k[ ]_{order}_{table_split}") for
+            agg, subtab, order, table_split in
+            product(ALG_aggregations, ALG_amount_of_subtables, ALG_orders, ALG_split_variant)]
+
+        clfs_loop += [
+            (PomyslAlgorithmParallel(aggregation_type=agg, order=order, random_state=random_state, n_jobs=-1),
              f"POM_ALG_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
+
+        clfs_loop += [
+            (PomyslAlgorithmGridSearchCV(aggregation_type=agg, order=order, random_state=random_state, n_jobs=-1),
+             f"POM_ALGgridSearchCV_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
+
         clfs_loop = set_params(clfs_loop, random_state)
 
         for dataset in datasets:
             if selector == "RFECV" or selector == "RFE":
                 file_path = op.join(path,
                                     "{}_RandomState{}_selector{}_step{}_nsplit{}_{}.xlsx".format(dataset,
-                                                                                                 random_state,selector, step,
+                                                                                                 random_state, selector,
+                                                                                                 step,
                                                                                                  n_split,
                                                                                                  selector))
             elif selector == "StabilitySelection":
@@ -86,3 +105,4 @@ for selector in feature_selectors:
             writer = pd.ExcelWriter(file_path, engine='xlsxwriter')
             results_df.to_excel(writer, sheet_name='Results', index=False)
             writer.close()
+os.system("shutdown /s /t 1")

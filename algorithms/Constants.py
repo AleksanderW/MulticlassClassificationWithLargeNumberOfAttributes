@@ -10,20 +10,21 @@ SSh_name = 'SSh_GSE13904'
 
 
 def extract_variables(text):
-    pattern = r'PROP_ALG_s(\w+)_(\w+)_k\[(.+?)\]_(\w+)_(\w+)'
-    pattern2 = r'POM_ALG_(\w+)_(\w+)'
+    pattern = r'(\w+[_A-Z]+)_s(\w+)_(\w+)_k\[(.+?)\]_(\w+)_(\w+)'
+    pattern2 = r'(\w+[_A-Z]+)_(\w+)_(\w+)'
     match = re.search(pattern, text)
     match2 = re.search(pattern2, text)
     if match:
-        return "PROP_ALG", match.group(1), match.group(2), match.group(3), match.group(4), match.group(5)
+        return match.group(1), match.group(2), match.group(3), match.group(4), match.group(5), match.group(6)
     elif match2:
-        return "POM_ALG", "", match2.group(1),  "", match2.group(2), ""
+        return match2.group(1), "", match2.group(2), "", match2.group(3), ""
     else:
         return text, '', '', '', '', ''
 
+
 if __name__ == "__main__":
     # Example usage:
-    input_text = "'PROP_ALG_s5_A10_k[3, 5, 7]_xuyager_2'"
+    input_text = "'PROP_ALG_s5_A10_k[ ]_xuyager_2'"
     result = extract_variables(input_text)
     print(result)
 
@@ -34,6 +35,8 @@ if __name__ == "__main__":
     input_text3 = "Invalid_Text"
     result3 = extract_variables(input_text3)
     print(result3)
+
+
 def set_params(classifiers, random_state):
     table = []
     for clf in classifiers:
