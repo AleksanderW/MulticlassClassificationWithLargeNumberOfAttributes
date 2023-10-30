@@ -51,15 +51,18 @@ def evaluate_classifiers(clf, name, dataset, n_splits, step, random_state, selec
             y_pred_scores = clf.decision_function(X_test)
             y_pred_proba = softmax(y_pred_scores, axis=1)
 
-        auc_value = roc_auc_score(y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y_encoded))
 
         metrics = {
             'accuracy': accuracy_score(y_test, y_pred),
             'balanced_accuracy': balanced_accuracy_score(y_test, y_pred),
-            'auc': auc_value
+            'auc': roc_auc_score(y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y_encoded))
         }
 
-        averages = ['micro', 'macro', 'weighted']
+        averages = [
+            # 'micro',
+            'macro',
+            # 'weighted'
+        ]
         for average in averages:
             precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average=average, zero_division=0)
             metrics[f'precision_{average}'] = precision
@@ -83,15 +86,15 @@ def evaluate_classifiers(clf, name, dataset, n_splits, step, random_state, selec
 
     accuracy = [result['accuracy'] for result in results]
     balanced_accuracy = [result['balanced_accuracy'] for result in results]
-    precision_mic = [result['precision_micro'] for result in results]
+    # precision_mic = [result['precision_micro'] for result in results]
     precision_mac = [result['precision_macro'] for result in results]
-    precision_wgt = [result['precision_weighted'] for result in results]
-    recall_mic = [result['recall_micro'] for result in results]
+    # precision_wgt = [result['precision_weighted'] for result in results]
+    # recall_mic = [result['recall_micro'] for result in results]
     recall_mac = [result['recall_macro'] for result in results]
-    recall_wgt = [result['recall_weighted'] for result in results]
-    f1_score_mic = [result['f1_score_micro'] for result in results]
+    # recall_wgt = [result['recall_weighted'] for result in results]
+    # f1_score_mic = [result['f1_score_micro'] for result in results]
     f1_score_mac = [result['f1_score_macro'] for result in results]
-    f1_score_wgt = [result['f1_score_weighted'] for result in results]
+    # f1_score_wgt = [result['f1_score_weighted'] for result in results]
     auc = [result['auc'] for result in results]
 
     return {
@@ -99,14 +102,14 @@ def evaluate_classifiers(clf, name, dataset, n_splits, step, random_state, selec
         'dataset': dataset,
         'accuracy': (np.mean(accuracy), np.std(accuracy)),
         'balanced_accuracy': (np.mean(balanced_accuracy), np.std(balanced_accuracy)),
-        'precision_mic': (np.mean(precision_mic), np.std(precision_mic)),
+        # 'precision_mic': (np.mean(precision_mic), np.std(precision_mic)),
         'precision_mac': (np.mean(precision_mac), np.std(precision_mac)),
-        'precision_wgt': (np.mean(precision_wgt), np.std(precision_wgt)),
-        'recall_mic': (np.mean(recall_mic), np.std(recall_mic)),
+        # 'precision_wgt': (np.mean(precision_wgt), np.std(precision_wgt)),
+        # 'recall_mic': (np.mean(recall_mic), np.std(recall_mic)),
         'recall_mac': (np.mean(recall_mac), np.std(recall_mac)),
-        'recall_wgt': (np.mean(recall_wgt), np.std(recall_wgt)),
-        'f1_score_mic': (np.mean(f1_score_mic), np.std(f1_score_mic)),
+        # 'recall_wgt': (np.mean(recall_wgt), np.std(recall_wgt)),
+        # 'f1_score_mic': (np.mean(f1_score_mic), np.std(f1_score_mic)),
         'f1_score_mac': (np.mean(f1_score_mac), np.std(f1_score_mac)),
-        'f1_score_wgt': (np.mean(f1_score_wgt), np.std(f1_score_wgt)),
+        # 'f1_score_wgt': (np.mean(f1_score_wgt), np.std(f1_score_wgt)),
         'auc': (np.mean(auc), np.std(auc)),
     }

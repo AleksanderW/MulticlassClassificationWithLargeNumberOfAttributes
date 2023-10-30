@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
@@ -89,19 +89,44 @@ class PomyslAlgorithmParallel:
         multiclass_labels = [self.y_labels[d] for d in decisions]
         return multiclass_labels
 
+    def predict_proba(self, X_test):
+        row_predictions_proba = []
+
+        for model in self.fit_models:
+            row_predictions_proba.append(model.predict_proba(X_test))
+        subtables = [row_predictions_proba]
+        min_max_array = [find_min_max_pairs(subtable) for subtable in subtables]
+        aggregation_function = {
+            'A1': A1_aggr, 'A2': A2_aggr, 'A3': A3_aggr, 'A4': A3_aggr,
+            'A5': A5_aggr, 'A6': A6_aggr, 'A7': A7_aggr, 'A8': A8_aggr,
+            'A9': A9_aggr, 'A10': A10_aggr
+        }
+        aggregated = aggregation_function.get(self.aggregation_type)(min_max_array)
+        for i in range(len(aggregated)):
+            for j in range(len(aggregated[i])):
+                aggregated[i][j] = np.mean(aggregated[i][j])
+            if np.sum(aggregated[i]) != 0:
+                aggregated[i] = aggregated[i] / np.sum(aggregated[i])
+            else:
+                aggregated[i] = np.ones_like(aggregated[i]) / len(aggregated[i])
+
+        return aggregated
+
 
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    alg = PomyslAlgorithmParallel(models = [
-            RandomForestClassifier(n_jobs=-1, random_state=13),
-            SVC(kernel="linear", probability=True, random_state=13),
-            DecisionTreeClassifier(random_state=13),
-            MLPClassifier(max_iter=1000, random_state=13),
-            KNeighborsClassifier(n_neighbors=1, p=1),
-            KNeighborsClassifier(n_neighbors=3, p=1),
-            KNeighborsClassifier(n_neighbors=5, p=1)
-        ])
+    alg = PomyslAlgorithmParallel(models=[
+        RandomForestClassifier(n_jobs=-1, random_state=13),
+        SVC(kernel="linear", probability=True, random_state=13),
+        DecisionTreeClassifier(random_state=13),
+        MLPClassifier(max_iter=1000, random_state=13),
+        KNeighborsClassifier(n_neighbors=1, p=1),
+        KNeighborsClassifier(n_neighbors=3, p=1),
+        KNeighborsClassifier(n_neighbors=5, p=1),
+    ])
     alg.fit(X_train, y_train)
     y_pred = alg.predict(X_test)
-    print(accuracy_score(y_pred, y_test))
+    print(accuracy_score(y_test, y_pred))
+    y_pred_proba = alg.predict_proba(X_test)
+    print(roc_auc_score(y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y)))

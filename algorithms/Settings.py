@@ -47,7 +47,6 @@ datasets = [
     SPs_name,
     SSh_name
 ]
-
 classifiers = [
     (KNeighborsClassifier(n_neighbors=3, n_jobs=-1, p=1), '3NN_MUL'),
     (OneVsOneClassifier(KNeighborsClassifier(n_neighbors=3, n_jobs=-1, p=1), n_jobs=-1), '3NN_OVO'),
@@ -64,12 +63,14 @@ classifiers = [
     (DecisionTreeClassifier(criterion='entropy'), 'DEC_TRE'),
     (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
     (StackingClassifier(
-        estimators=[('rf', RandomForestClassifier(n_jobs=-1)), ('svc', SVC(kernel="linear", probability=True)),
-                    ('dt', DecisionTreeClassifier()), ('mlp', MLPClassifier(max_iter=1000)),
+        estimators=[('rf', RandomForestClassifier(n_estimators=50, max_features="log2", n_jobs=-1)),
+                    ('svc', SVC(kernel="linear", probability=True, C=0.1)),
+                    ('dt', DecisionTreeClassifier(class_weight="balanced")),
+                    ('mlp', MLPClassifier(max_iter=2000, hidden_layer_sizes=(50,), activation="identity")),
                     ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
                     ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
-                    ('knn5', KNeighborsClassifier(n_neighbors=5, p=1))],
-        final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKIN')
+                    ('knn5', KNeighborsClassifier(n_neighbors=5, weights="distance", p=1))],
+        final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
 ]
 
 # Parametry poniżej dotyczą Proponowanego Algorytmu
@@ -112,11 +113,11 @@ ALG_split_variant = [
 ]
 
 ALG_models = [
-            RandomForestClassifier(n_jobs=-1),
-            SVC(kernel="linear", probability=True),
-            DecisionTreeClassifier(),
-            MLPClassifier(max_iter=1000),
-            KNeighborsClassifier(n_neighbors=1, p=1),
-            KNeighborsClassifier(n_neighbors=3, p=1),
-            KNeighborsClassifier(n_neighbors=5, p=1)
+    RandomForestClassifier(n_estimators=50, max_features="log2", n_jobs=-1),
+    SVC(kernel="linear", probability=True, C=0.1),
+    DecisionTreeClassifier(class_weight="balanced"),
+    MLPClassifier(max_iter=2000, hidden_layer_sizes=(50,), activation="identity"),
+    KNeighborsClassifier(n_neighbors=1, p=1),
+    KNeighborsClassifier(n_neighbors=3, p=1),
+    KNeighborsClassifier(n_neighbors=5, weights="distance", p=1)
 ]

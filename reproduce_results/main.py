@@ -6,6 +6,7 @@ import pandas as pd
 
 from algorithms.Constants import extract_variables, set_params, check_if_models_exist, create_logs, empty_logs
 from algorithms.Evaluation import evaluate_classifiers
+from algorithms.Pomysl_Algorithm import PomyslAlgorithm
 from algorithms.Pomysl_Algorithm_Parallel import PomyslAlgorithmParallel
 from algorithms.Proposed_Algorithm_Parallel import ProposedAlgorithmParallel
 from algorithms.Settings import datasets, steps, ALG_amount_of_subtables, ALG_aggregations, ALG_models, n_splits, \
@@ -25,7 +26,7 @@ for selector in feature_selectors:
             (
                 ProposedAlgorithmParallel(amount_of_subtables=subtab, aggregation_type=agg, knn_neighbours=kNN,
                                           order=order, models=ALG_models, table_split=table_split,
-                                           random_state=random_state, n_jobs=-1),
+                                          random_state=random_state, n_jobs=-1),
                 f"PROP_ALG_s{subtab}_{agg}_k{kNN}_{order}_{table_split}") for agg, subtab, kNN, order, table_split in
             product(ALG_aggregations, ALG_amount_of_subtables, ALG_kNN_neighbours, ALG_orders, ALG_split_variant)]
 
@@ -68,24 +69,24 @@ for selector in feature_selectors:
                                 'bal_acc_std': result['balanced_accuracy'][1],
                                 'auc': result['auc'][0],
                                 'auc_std': result['auc'][1],
-                                'mic_prec': result['precision_mic'][0],
-                                'mic_prec_std': result['precision_mic'][1],
+                                # 'mic_prec': result['precision_mic'][0],
+                                # 'mic_prec_std': result['precision_mic'][1],
                                 'mac_prec': result['precision_mac'][0],
                                 'mac_prec_std': result['precision_mac'][1],
-                                'wgt_prec': result['precision_wgt'][0],
-                                'wgt_prec_std': result['precision_wgt'][1],
-                                'mic_recall': result['recall_mic'][0],
-                                'mic_recall_std': result['recall_mic'][1],
+                                # 'wgt_prec': result['precision_wgt'][0],
+                                # 'wgt_prec_std': result['precision_wgt'][1],
+                                # 'mic_recall': result['recall_mic'][0],
+                                # 'mic_recall_std': result['recall_mic'][1],
                                 'mac_recall': result['recall_mac'][0],
                                 'mac_recall_std': result['recall_mac'][1],
-                                'wgt_recall': result['recall_wgt'][0],
-                                'wgt_recall_std': result['recall_wgt'][1],
-                                'mic_f1': result['f1_score_mic'][0],
-                                'mic_f1_std': result['f1_score_mic'][1],
+                                # 'wgt_recall': result['recall_wgt'][0],
+                                # 'wgt_recall_std': result['recall_wgt'][1],
+                                # 'mic_f1': result['f1_score_mic'][0],
+                                # 'mic_f1_std': result['f1_score_mic'][1],
                                 'mac_f1': result['f1_score_mac'][0],
                                 'mac_f1_std': result['f1_score_mac'][1],
-                                'wgt_f1': result['f1_score_wgt'][0],
-                                'wgt_f1_std': result['f1_score_wgt'][1]
+                                # 'wgt_f1': result['f1_score_wgt'][0],
+                                # 'wgt_f1_std': result['f1_score_wgt'][1]
                                 })
 
             results_df = pd.DataFrame(results)
