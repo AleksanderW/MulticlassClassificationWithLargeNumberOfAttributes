@@ -21,7 +21,7 @@ from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisi
 
 class ProposedAlgorithmParallelGridSearchCV:
     def __init__(self, amount_of_subtables=2, aggregation_type="A1", random_state=42, knn_neighbours=[3, 5, 7],
-                 order="xuyager", dataset="", iteration="", table_split=2, n_jobs=1):
+                 order="xuyager", dataset="", iteration="", table_split=2, n_jobs=-1):
         self.n_jobs = n_jobs
         self.table_split = table_split
         self.kNN_neighbours = knn_neighbours
@@ -163,16 +163,41 @@ class ProposedAlgorithmParallelGridSearchCV:
             RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
             SVC(kernel="linear", probability=True, random_state=self.random_state),
             DecisionTreeClassifier(random_state=self.random_state),
-            MLPClassifier(max_iter=1000, random_state=self.random_state),
+            MLPClassifier(max_iter=2000, random_state=self.random_state),
             KNeighborsClassifier(n_neighbors=1, p=1)
         ]
 
         param_grid = {
-            'RandomForestClassifier': {'n_estimators': [10, 50, 100]},
-            'SVC': {'C': [0.1, 1, 10]},
-            'DecisionTreeClassifier': {'max_depth': [None, 10, 20]},
-            'MLPClassifier': {'hidden_layer_sizes': [(50,), (100,), (50, 50)]},
-            'KNeighborsClassifier': {'n_neighbors': [1, 3, 5, 7, 11]},
+            'RandomForestClassifier':
+                {
+                    'n_estimators': [10, 50, 100, 500],
+                    'max_features': ['sqrt', 'log2', None],
+                    'class_weight': [None, "balanced", "balanced_subsample"]
+                },
+            'SVC':
+                {
+                    'C': [0.1, 1, 5, 10],
+                    'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+                    'class_weight': [None, 'balanced']
+                },
+            'DecisionTreeClassifier':
+                {
+                    'criterion': ['entropy', 'log_loss', 'gini'],
+                    'max_features': ['sqrt', 'log2', None],
+                    'class_weight': [None, 'balanced']
+                },
+            'MLPClassifier':
+                {
+                    'hidden_layer_sizes': [(50,), (100,), (50, 50), (100, 100)],
+                    'activation': ['identity', 'logistic', 'tanh', 'relu'],
+                    'learning_rate': ['constant', 'adaptive'],
+                    'warm_start': [False, True],
+                    'alpha': [0.0001, 0.001, 0.01],
+                },
+            'KNeighborsClassifier':
+                {
+                    'n_neighbors': [1, 3, 5, 7, 11]
+                },
         }
 
         def fit_model(model, X_train, y_train):

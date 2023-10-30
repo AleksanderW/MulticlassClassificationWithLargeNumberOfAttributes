@@ -105,4 +105,3 @@ for selector in feature_selectors:
             writer = pd.ExcelWriter(file_path, engine='xlsxwriter')
             results_df.to_excel(writer, sheet_name='Results', index=False)
             writer.close()
-os.system("shutdown /s /t 1")
