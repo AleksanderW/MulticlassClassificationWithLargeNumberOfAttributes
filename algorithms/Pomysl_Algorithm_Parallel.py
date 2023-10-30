@@ -21,7 +21,15 @@ from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisi
 
 class PomyslAlgorithmParallel:
     def __init__(self, aggregation_type="A1", random_state=42,
-                 order="xuyager", dataset="", iteration="", n_jobs=1):
+                 order="xuyager", dataset="", iteration="", n_jobs=-1, models=None):
+
+        if models is None:
+            models = [
+                KNeighborsClassifier(n_neighbors=1, p=1),
+                KNeighborsClassifier(n_neighbors=3, p=1),
+                KNeighborsClassifier(n_neighbors=5, p=1)
+            ]
+        self.models = models
         self.order = order
         self.aggregation_type = aggregation_type
         self.random_state = random_state
@@ -51,16 +59,6 @@ class PomyslAlgorithmParallel:
 
     def fit(self, X_train, y_train):
         self.y_labels = np.unique(y_train)
-        row_fit_models = []
-        models = [
-            RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
-            SVC(kernel="linear", probability=True, random_state=self.random_state),
-            DecisionTreeClassifier(random_state=self.random_state),
-            MLPClassifier(max_iter=1000, random_state=self.random_state),
-            KNeighborsClassifier(n_neighbors=1, p=1),
-            KNeighborsClassifier(n_neighbors=3, p=1),
-            KNeighborsClassifier(n_neighbors=5, p=1)
-        ]
 
         def fit_model(model, X_train, y_train):
             model.fit(X_train, y_train)
@@ -69,7 +67,7 @@ class PomyslAlgorithmParallel:
         row_fit_models = []
         row_fit_models.append(
             Parallel(n_jobs=self.n_jobs)(
-                delayed(fit_model)(model, X_train, y_train) for model in models
+                delayed(fit_model)(model, X_train, y_train) for model in self.models
             )
         )
         self.fit_models = row_fit_models[0]
@@ -95,7 +93,15 @@ class PomyslAlgorithmParallel:
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    alg = PomyslAlgorithmParallel()
+    alg = PomyslAlgorithmParallel(models = [
+            RandomForestClassifier(n_jobs=-1, random_state=13),
+            SVC(kernel="linear", probability=True, random_state=13),
+            DecisionTreeClassifier(random_state=13),
+            MLPClassifier(max_iter=1000, random_state=13),
+            KNeighborsClassifier(n_neighbors=1, p=1),
+            KNeighborsClassifier(n_neighbors=3, p=1),
+            KNeighborsClassifier(n_neighbors=5, p=1)
+        ])
     alg.fit(X_train, y_train)
     y_pred = alg.predict(X_test)
     print(accuracy_score(y_pred, y_test))

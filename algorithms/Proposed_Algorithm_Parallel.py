@@ -21,7 +21,15 @@ from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisi
 
 class ProposedAlgorithmParallel:
     def __init__(self, amount_of_subtables=2, aggregation_type="A1", random_state=42, knn_neighbours=[3, 5, 7],
-                 order="xuyager", dataset="", iteration="", table_split=2, n_jobs=1):
+                 order="xuyager", dataset="", iteration="", table_split=2, n_jobs=-1, models=None):
+
+        if models is None:
+            models = [
+                KNeighborsClassifier(n_neighbors=1, p=1),
+                KNeighborsClassifier(n_neighbors=3, p=1),
+                KNeighborsClassifier(n_neighbors=5, p=1)
+            ]
+        self.models = models
         self.n_jobs = n_jobs
         self.table_split = table_split
         self.kNN_neighbours = knn_neighbours
@@ -159,17 +167,6 @@ class ProposedAlgorithmParallel:
 
         split_into_subtables = split_options[self.table_split]
         self.subtable_col_indexes = split_into_subtables()
-        row_fit_models = []
-        models = [
-            RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
-            SVC(kernel="linear", probability=True, random_state=self.random_state),
-            DecisionTreeClassifier(random_state=self.random_state),
-            MLPClassifier(max_iter=1000, random_state=self.random_state),
-            KNeighborsClassifier(n_neighbors=1, p=1),
-            KNeighborsClassifier(n_neighbors=3, p=1),
-            KNeighborsClassifier(n_neighbors=5, p=1)
-        ]
-
         def fit_model(model, X_train, y_train):
             model.fit(X_train, y_train)
             return model
@@ -180,7 +177,7 @@ class ProposedAlgorithmParallel:
 
             row_fit_models.append(
                 Parallel(n_jobs=self.n_jobs)(
-                    delayed(fit_model)(model, X_train_subset_split, y_train) for model in models
+                    delayed(fit_model)(model, X_train_subset_split, y_train) for model in self.models
                 )
             )
 

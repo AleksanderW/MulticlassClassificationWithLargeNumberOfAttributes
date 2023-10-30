@@ -110,3 +110,13 @@ ALG_split_variant = [
     2,
     # 3
 ]
+
+ALG_models = [
+            RandomForestClassifier(n_jobs=-1),
+            SVC(kernel="linear", probability=True),
+            DecisionTreeClassifier(),
+            MLPClassifier(max_iter=1000),
+            KNeighborsClassifier(n_neighbors=1, p=1),
+            KNeighborsClassifier(n_neighbors=3, p=1),
+            KNeighborsClassifier(n_neighbors=5, p=1)
+]

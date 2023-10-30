@@ -39,13 +39,21 @@ if __name__ == "__main__":
 
 def set_params(classifiers, random_state):
     table = []
-    for clf in classifiers:
+    for clf_tuple in classifiers:
+        clf, clf_name = clf_tuple
         try:
-            clf[0].set_params(random_state=random_state)
+            clf.set_params(random_state=random_state)
         except ValueError:
-            table.append(clf)
+            table.append(clf_tuple)
             continue
-        table.append(clf)
+        if hasattr(clf, 'models') and isinstance(clf.models, list):
+            for model in clf.models:
+                try:
+                    model.set_params(random_state=random_state)
+                except ValueError:
+                    pass
+        table.append(clf_tuple)
+
     return table
 
 

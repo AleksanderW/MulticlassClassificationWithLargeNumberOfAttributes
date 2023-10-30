@@ -20,7 +20,15 @@ from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisi
 
 class ProposedAlgorithm:
     def __init__(self, amount_of_subtables=2, aggregation_type="A1", random_state=42, knn_neighbours=[3, 5, 7],
-                 order="xuyager", dataset="", iteration="", table_split=2):
+                 order="xuyager", dataset="", iteration="", table_split=2, models=None):
+
+        if models is None:
+            models = [
+                KNeighborsClassifier(n_neighbors=1, p=1),
+                KNeighborsClassifier(n_neighbors=3, p=1),
+                KNeighborsClassifier(n_neighbors=5, p=1)
+            ]
+        self.models = models
         self.table_split = table_split
         self.kNN_neighbours = knn_neighbours
         self.order = order
