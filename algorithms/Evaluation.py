@@ -39,6 +39,8 @@ def evaluate_classifiers(clf, name, dataset, n_splits, step, random_state, selec
             clf.dataset = dataset
         if 'iteration' in clf.get_params():
             clf.iteration = iteration
+        if 'random_state' in clf.get_params():
+            clf.random_state = random_state
         clf.fit(X_train, y_train)
 
         X_test_scaled = scaler.fit_transform(X_test, y_test)

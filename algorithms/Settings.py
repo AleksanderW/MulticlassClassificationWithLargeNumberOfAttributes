@@ -62,15 +62,15 @@ classifiers = [
     (RandomForestClassifier(n_jobs=-1), 'RND_FST'),
     (DecisionTreeClassifier(criterion='entropy'), 'DEC_TRE'),
     (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
-    (StackingClassifier(
-        estimators=[('rf', RandomForestClassifier(n_estimators=50, max_features="log2", n_jobs=-1)),
-                    ('svc', SVC(kernel="linear", probability=True, C=0.1)),
-                    ('dt', DecisionTreeClassifier(class_weight="balanced")),
-                    ('mlp', MLPClassifier(max_iter=2000, hidden_layer_sizes=(50,), activation="identity")),
-                    ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
-                    ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
-                    ('knn5', KNeighborsClassifier(n_neighbors=5, weights="distance", p=1))],
-        final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
+    # (StackingClassifier(
+    #     estimators=[('rf', RandomForestClassifier(n_jobs=-1)),
+    #                 ('svc', SVC(kernel="linear", probability=True)),
+    #                 ('dt', DecisionTreeClassifier()),
+    #                 ('mlp', MLPClassifier(max_iter=2000)),
+    #                 ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
+    #                 ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
+    #                 ('knn5', KNeighborsClassifier(n_neighbors=5, p=1))],
+    #     final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
 ]
 
 # Parametry poniżej dotyczą Proponowanego Algorytmu
@@ -112,12 +112,66 @@ ALG_split_variant = [
     # 3
 ]
 
+# ALG_models = [
+#     RandomForestClassifier(n_estimators=50, max_features="log2", n_jobs=-1),
+#     SVC(kernel="linear", probability=True, C=0.1),
+#     DecisionTreeClassifier(class_weight="balanced"),
+#     MLPClassifier(max_iter=2000, hidden_layer_sizes=(50,), activation="identity"),
+#     KNeighborsClassifier(n_neighbors=1, p=1),
+#     KNeighborsClassifier(n_neighbors=3, p=1),
+#     KNeighborsClassifier(n_neighbors=5, p=1)
+# ]
+
 ALG_models = [
-    RandomForestClassifier(n_estimators=50, max_features="log2", n_jobs=-1),
-    SVC(kernel="linear", probability=True, C=0.1),
-    DecisionTreeClassifier(class_weight="balanced"),
-    MLPClassifier(max_iter=2000, hidden_layer_sizes=(50,), activation="identity"),
-    KNeighborsClassifier(n_neighbors=1, p=1),
-    KNeighborsClassifier(n_neighbors=3, p=1),
-    KNeighborsClassifier(n_neighbors=5, weights="distance", p=1)
+    [
+        RandomForestClassifier(n_jobs=-1),
+        ExtraTreesClassifier(n_jobs=-1),
+        # DecisionTreeClassifier()
+     ],
+    [
+        KNeighborsClassifier(n_neighbors=1, p=1),
+        KNeighborsClassifier(n_neighbors=3, p=1),
+        KNeighborsClassifier(n_neighbors=5, p=1)
+    ]
 ]
+# from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
+# from sklearn.tree import DecisionTreeClassifier
+# from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier
+# from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+# from sklearn.neighbors import KNeighborsClassifier, RadiusNeighborsClassifier
+# from sklearn.svm import SVC, NuSVC, LinearSVC
+
+# group1 = [
+#     RandomForestClassifier(n_jobs=-1),
+#     DecisionTreeClassifier()
+# ]
+#
+# group2 = [
+#     KNeighborsClassifier(n_neighbors=1, p=1),
+#     KNeighborsClassifier(n_neighbors=3, p=1),
+#     KNeighborsClassifier(n_neighbors=5, p=1)
+# ]
+#
+# group3 = [
+#     LogisticRegression(),
+#     RidgeClassifier(),
+#     SGDClassifier()
+# ]
+#
+# group4 = [
+#     GaussianNB(),
+#     MultinomialNB(),
+#     BernoulliNB()
+# ]
+#
+# group5 = [
+#     SVC(),
+#     NuSVC(),
+#     LinearSVC()
+# ]
+#
+# group6 = [
+#     GradientBoostingClassifier(),
+#     AdaBoostClassifier()
+# ]
+

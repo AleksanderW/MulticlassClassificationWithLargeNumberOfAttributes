@@ -2,17 +2,13 @@ import os
 from itertools import combinations
 
 import numpy as np
-from joblib import Parallel, delayed
-from scipy.special import softmax
 from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
 
 from algorithms.Aggregations import A1_aggr, A2_aggr, A3_aggr, A5_aggr, A6_aggr, A7_aggr, A8_aggr, \
     A9_aggr, A10_aggr
@@ -20,20 +16,24 @@ from algorithms.MinMaxArrays import find_min_max_pairs
 from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisions
 
 
-class ProposedAlgorithmParallel:
-    def __init__(self, amount_of_subtables=2, aggregation_type="A1", random_state=42, knn_neighbours=[3, 5, 7],
-                 order="xuyager", dataset="", iteration="", table_split=2, n_jobs=-1, models=None):
+class ProposedAlgorithm:
+    def __init__(self, amount_of_subtables=2, aggregation_type="A1", random_state=42,
+                 order="xuyager", dataset="", iteration="", table_split=2, models=None):
 
         if models is None:
             models = [
-                KNeighborsClassifier(n_neighbors=1, p=1),
-                KNeighborsClassifier(n_neighbors=3, p=1),
-                KNeighborsClassifier(n_neighbors=5, p=1)
+                [
+                    RandomForestClassifier(n_jobs=-1),
+                    ExtraTreesClassifier(n_jobs=-1),
+                ],
+                [
+                    KNeighborsClassifier(n_neighbors=1, p=1),
+                    KNeighborsClassifier(n_neighbors=3, p=1),
+                    KNeighborsClassifier(n_neighbors=5, p=1)
+                ]
             ]
         self.models = models
-        self.n_jobs = n_jobs
         self.table_split = table_split
-        self.kNN_neighbours = knn_neighbours
         self.order = order
         self.amount_of_subtables = amount_of_subtables
         self.aggregation_type = aggregation_type
@@ -49,7 +49,6 @@ class ProposedAlgorithmParallel:
             'amount_of_subtables': self.amount_of_subtables,
             'aggregation_type': self.aggregation_type,
             'random_state': self.random_state,
-            'knn_neighbours': self.kNN_neighbours,
             'order': self.order,
             'dataset': self.dataset,
             'iteration': self.iteration
@@ -168,46 +167,60 @@ class ProposedAlgorithmParallel:
 
         split_into_subtables = split_options[self.table_split]
         self.subtable_col_indexes = split_into_subtables()
-
-        def fit_model(model, X_train, y_train):
-            model.fit(X_train, y_train)
-            return model
-
         row_fit_models = []
+
         for i in range(self.amount_of_subtables):
             X_train_subset_split = X_train[:, self.subtable_col_indexes[i]]
+            models_for_row = []
 
-            row_fit_models.append(
-                Parallel(n_jobs=self.n_jobs)(
-                    delayed(fit_model)(model, X_train_subset_split, y_train) for model in self.models
-                )
-            )
+            for model_list in self.models:
+                models_for_subtable = []
 
+                for model in model_list:
+                    model.fit(X_train_subset_split, y_train)
+                    models_for_subtable.append(model)
+
+                models_for_row.append(models_for_subtable)
+            row_fit_models.append(models_for_row)
         self.fit_models = row_fit_models
 
     def predict(self, X_test):
         aggregation_functions = {
             'A1': A1_aggr, 'A2': A2_aggr, 'A3': A3_aggr, 'A4': A3_aggr, 'A5': A5_aggr, 'A6': A6_aggr, 'A7': A7_aggr,
-            'A8': A8_aggr, 'A9': A9_aggr, 'A10': A10_aggr}
+            'A8': A8_aggr, 'A9': A9_aggr, 'A10': A10_aggr
+        }
         orders = {'xuyager': xu_yager_order, 'lex1': lex1_order, 'lex2': lex2_order}
-        subtables = []
+        predictions = []
+
         for i in range(self.amount_of_subtables):
             X_test_subset_split = X_test[:, self.subtable_col_indexes[i]]
-            row_predicions = []
-            for model in self.fit_models[i]:
-                row_predicions.append(model.predict_proba(X_test_subset_split))
-            subtables.append(row_predicions)
+            row_predictions = []
+
+            for model_list in self.fit_models[i]:
+                model_predictions = []
+
+                for model in model_list:
+                    model_predictions.append(model.predict_proba(X_test_subset_split))
+
+                row_predictions.append(model_predictions)
+
+            predictions.append(row_predictions)
 
         min_max_array = []
-        for subtable in subtables:
-            min_max_array.append(find_min_max_pairs(subtable))
+
+        for predictions in predictions:
+            for subtable in predictions:
+                min_max_array.append(find_min_max_pairs(subtable))
+
         aggregated = aggregation_functions.get(self.aggregation_type)(min_max_array)
         ordered = orders.get(self.order)(aggregated)
-        # warning_log(self.dataset, self.iteration, self.amount_of_subtables, self.random_state, self.aggregation_type,
-        #             self.kNN_neighbours,
-        #             ordered, self.order)
+
+        warning_log(self.dataset, self.iteration, self.amount_of_subtables, self.random_state, self.aggregation_type,
+                    ordered, self.order)
+
         decisions = get_decisions(ordered)
         multiclass_labels = [self.y_labels[d] for d in decisions]
+
         return multiclass_labels
 
     def predict_proba(self, X_test):
@@ -215,17 +228,28 @@ class ProposedAlgorithmParallel:
             'A1': A1_aggr, 'A2': A2_aggr, 'A3': A3_aggr, 'A4': A3_aggr, 'A5': A5_aggr, 'A6': A6_aggr, 'A7': A7_aggr,
             'A8': A8_aggr, 'A9': A9_aggr, 'A10': A10_aggr}
         orders = {'xuyager': xu_yager_order, 'lex1': lex1_order, 'lex2': lex2_order}
-        subtables = []
+        predictions = []
+
         for i in range(self.amount_of_subtables):
             X_test_subset_split = X_test[:, self.subtable_col_indexes[i]]
-            row_predicions = []
-            for model in self.fit_models[i]:
-                row_predicions.append(model.predict_proba(X_test_subset_split))
-            subtables.append(row_predicions)
+            row_predictions = []
+
+            for model_list in self.fit_models[i]:
+                model_predictions = []
+
+                for model in model_list:
+                    model_predictions.append(model.predict_proba(X_test_subset_split))
+
+                row_predictions.append(model_predictions)
+
+            predictions.append(row_predictions)
 
         min_max_array = []
-        for subtable in subtables:
-            min_max_array.append(find_min_max_pairs(subtable))
+
+        for predictions in predictions:
+            for subtable in predictions:
+                min_max_array.append(find_min_max_pairs(subtable))
+
         aggregated = aggregation_functions.get(self.aggregation_type)(min_max_array)
         for i in range(len(aggregated)):
             for j in range(len(aggregated[i])):
@@ -237,7 +261,7 @@ class ProposedAlgorithmParallel:
         return aggregated
 
 
-def warning_log(dataset, iteration, subtables, random_state, aggregation, knn, tuples, order):
+def warning_log(dataset, iteration, subtables, random_state, aggregation, tuples, order):
     all_tuples = []
     for tup in tuples:
         equal_tuples = []
@@ -255,7 +279,7 @@ def warning_log(dataset, iteration, subtables, random_state, aggregation, knn, t
     all_tuples = [[(round(val[0], 4), round(val[1], 4), val[2]) for val in subtuple] for subtuple in
                   all_tuples]  # przejrzystość wyników
     if all_tuples:
-        message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {knn} {order}, " + "equal tuples: " + f"{all_tuples}"
+        message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}, " + "equal tuples: " + f"{all_tuples}"
         log_file_path = "log_file.txt"
         if os.path.exists(log_file_path):
             with open(log_file_path, "r") as f:
@@ -271,8 +295,8 @@ def warning_log(dataset, iteration, subtables, random_state, aggregation, knn, t
     return all_tuples
 
 
-def shuffle_with_return_log(dataset, iteration, subtables, random_state, aggregation, knn, order, columns):
-    message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {knn} {order}: column amount{columns}"
+def shuffle_with_return_log(dataset, iteration, subtables, random_state, aggregation, order, columns):
+    message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}: column amount{columns}"
     shuffle_path = "shuffle_log.txt"
     if os.path.exists(shuffle_path):
         with open(shuffle_path, "r") as f:
@@ -306,7 +330,7 @@ def split3_features_log(dataset, iteration, subtables, random_state, aggregation
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    alg = ProposedAlgorithmParallel(amount_of_subtables=7, table_split=2, n_jobs=-1)
+    alg = ProposedAlgorithm(amount_of_subtables=7, table_split=2)
     alg.fit(X_train, y_train)
     y_pred = alg.predict(X_test)
     print(accuracy_score(y_test, y_pred))

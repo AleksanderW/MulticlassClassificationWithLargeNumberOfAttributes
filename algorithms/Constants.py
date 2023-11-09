@@ -10,21 +10,21 @@ SSh_name = 'SSh_GSE13904'
 
 
 def extract_variables(text):
-    pattern = r'(\w+[_A-Z]+)_s(\w+)_(\w+)_k\[(.+?)\]_(\w+)_(\w+)'
+    pattern = r'(\w+[_A-Z]+)_s(\w+)_(\w+)_(\w+)_(\w+)'
     pattern2 = r'(\w+[_A-Z]+)_(\w+)_(\w+)'
     match = re.search(pattern, text)
     match2 = re.search(pattern2, text)
     if match:
-        return match.group(1), match.group(2), match.group(3), match.group(4), match.group(5), match.group(6)
+        return match.group(1), match.group(2), match.group(3), match.group(4), match.group(5)
     elif match2:
-        return match2.group(1), "", match2.group(2), "", match2.group(3), ""
+        return match2.group(1), "", match2.group(2), match2.group(3), ""
     else:
-        return text, '', '', '', '', ''
+        return text, '', '', '', ''
 
 
 if __name__ == "__main__":
     # Example usage:
-    input_text = "'PROP_ALG_s5_A10_k[ ]_xuyager_2'"
+    input_text = "'PROP_ALG_s5_A10_xuyager_2'"
     result = extract_variables(input_text)
     print(result)
 
@@ -47,11 +47,12 @@ def set_params(classifiers, random_state):
             table.append(clf_tuple)
             continue
         if hasattr(clf, 'models') and isinstance(clf.models, list):
-            for model in clf.models:
-                try:
-                    model.set_params(random_state=random_state)
-                except ValueError:
-                    pass
+            for model_list in clf.models:
+                for model in model_list:
+                    try:
+                        model.set_params(random_state=random_state)
+                    except ValueError:
+                        pass
         table.append(clf_tuple)
 
     return table

@@ -2,16 +2,13 @@ import os
 from itertools import combinations
 
 import numpy as np
-from joblib import Parallel, delayed
 from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
+
 
 from algorithms.Aggregations import A1_aggr, A2_aggr, A3_aggr, A5_aggr, A6_aggr, A7_aggr, A8_aggr, \
     A9_aggr, A10_aggr
@@ -19,26 +16,31 @@ from algorithms.MinMaxArrays import find_min_max_pairs
 from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisions
 
 
-class PomyslAlgorithmParallel:
+class PomyslAlgorithm:
     def __init__(self, aggregation_type="A1", random_state=42,
-                 order="xuyager", dataset="", iteration="", n_jobs=-1, models=None):
+                 order="xuyager", dataset="", iteration="", models=None):
 
         if models is None:
             models = [
-                KNeighborsClassifier(n_neighbors=1, p=1),
-                KNeighborsClassifier(n_neighbors=3, p=1),
-                KNeighborsClassifier(n_neighbors=5, p=1)
+                [
+                    RandomForestClassifier(n_jobs=-1),
+                    ExtraTreesClassifier(n_jobs=-1),
+                ],
+                [
+                    KNeighborsClassifier(n_neighbors=1, p=1),
+                    KNeighborsClassifier(n_neighbors=3, p=1),
+                    KNeighborsClassifier(n_neighbors=5, p=1)
+                ]
             ]
         self.models = models
         self.order = order
         self.aggregation_type = aggregation_type
         self.random_state = random_state
         self.subtable_col_indexes = None
-        self.fit_models = None
+        self.fit_group_of_models = None
         self.y_labels = None
         self.dataset = dataset
         self.iteration = iteration
-        self.n_jobs = n_jobs
 
     def get_params(self):
         return {
@@ -59,30 +61,28 @@ class PomyslAlgorithmParallel:
 
     def fit(self, X_train, y_train):
         self.y_labels = np.unique(y_train)
-
-        def fit_model(model, X_train, y_train):
-            model.fit(X_train, y_train)
-            return model
-
         row_fit_models = []
-        row_fit_models.append(
-            Parallel(n_jobs=self.n_jobs)(
-                delayed(fit_model)(model, X_train, y_train) for model in self.models
-            )
-        )
-        self.fit_models = row_fit_models[0]
+
+        for model_list in self.models:
+            models_for_row = []
+            for model in model_list:
+                model.fit(X_train, y_train)
+                models_for_row.append(model)
+            row_fit_models.append(models_for_row)
+        self.fit_group_of_models = row_fit_models
 
     def predict(self, X_test):
         aggregation_functions = {
             'A1': A1_aggr, 'A2': A2_aggr, 'A3': A3_aggr, 'A4': A3_aggr, 'A5': A5_aggr, 'A6': A6_aggr, 'A7': A7_aggr,
             'A8': A8_aggr, 'A9': A9_aggr, 'A10': A10_aggr}
         orders = {'xuyager': xu_yager_order, 'lex1': lex1_order, 'lex2': lex2_order}
-        subtables = []
-        row_predicions = []
-        for model in self.fit_models:
-            row_predicions.append(model.predict_proba(X_test))
-        subtables.append(row_predicions)
-        min_max_array = [find_min_max_pairs(subtable) for subtable in subtables]
+        grouped_predictions = []
+        for grouped_models in self.fit_group_of_models:
+            row_preds = []
+            for model in grouped_models:
+                row_preds.append(model.predict_proba(X_test))
+            grouped_predictions.append(row_preds)
+        min_max_array = [find_min_max_pairs(gpredict) for gpredict in grouped_predictions]
         aggregated = aggregation_functions.get(self.aggregation_type)(min_max_array)
         ordered = orders.get(self.order)(aggregated)
         decisions = get_decisions(ordered)
@@ -92,16 +92,20 @@ class PomyslAlgorithmParallel:
     def predict_proba(self, X_test):
         row_predictions_proba = []
 
-        for model in self.fit_models:
-            row_predictions_proba.append(model.predict_proba(X_test))
-        subtables = [row_predictions_proba]
-        min_max_array = [find_min_max_pairs(subtable) for subtable in subtables]
+        for grouped_models in self.fit_group_of_models:
+            row_preds = []
+            for model in grouped_models:
+                row_preds.append(model.predict_proba(X_test))
+            row_predictions_proba.append(row_preds)
+
+        min_max_array = [find_min_max_pairs(gpredict) for gpredict in row_predictions_proba]
         aggregation_function = {
             'A1': A1_aggr, 'A2': A2_aggr, 'A3': A3_aggr, 'A4': A3_aggr,
             'A5': A5_aggr, 'A6': A6_aggr, 'A7': A7_aggr, 'A8': A8_aggr,
             'A9': A9_aggr, 'A10': A10_aggr
         }
         aggregated = aggregation_function.get(self.aggregation_type)(min_max_array)
+
         for i in range(len(aggregated)):
             for j in range(len(aggregated[i])):
                 aggregated[i][j] = np.mean(aggregated[i][j])
@@ -116,15 +120,7 @@ class PomyslAlgorithmParallel:
 if __name__ == "__main__":
     X, y = load_iris(return_X_y=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    alg = PomyslAlgorithmParallel(models=[
-        RandomForestClassifier(n_jobs=-1, random_state=13),
-        SVC(kernel="linear", probability=True, random_state=13),
-        DecisionTreeClassifier(random_state=13),
-        MLPClassifier(max_iter=1000, random_state=13),
-        KNeighborsClassifier(n_neighbors=1, p=1),
-        KNeighborsClassifier(n_neighbors=3, p=1),
-        KNeighborsClassifier(n_neighbors=5, p=1),
-    ])
+    alg = PomyslAlgorithm()
     alg.fit(X_train, y_train)
     y_pred = alg.predict(X_test)
     print(accuracy_score(y_test, y_pred))
