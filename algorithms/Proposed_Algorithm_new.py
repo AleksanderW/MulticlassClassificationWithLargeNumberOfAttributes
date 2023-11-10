@@ -2,6 +2,7 @@ import os
 from itertools import combinations
 
 import numpy as np
+from scipy.special import softmax
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn.inspection import permutation_importance
@@ -200,7 +201,12 @@ class ProposedAlgorithm:
                 model_predictions = []
 
                 for model in model_list:
-                    model_predictions.append(model.predict_proba(X_test_subset_split))
+                    if hasattr(model, "predict_proba"):
+                        model_predictions.append(model.predict_proba(X_test_subset_split))
+                    elif hasattr(model, "decision_function"):
+                        decision_scores = model.decision_function(X_test_subset_split)
+                        probabilities = softmax(decision_scores, axis=1)
+                        model_predictions.append(probabilities)
 
                 row_predictions.append(model_predictions)
 
@@ -238,7 +244,12 @@ class ProposedAlgorithm:
                 model_predictions = []
 
                 for model in model_list:
-                    model_predictions.append(model.predict_proba(X_test_subset_split))
+                    if hasattr(model, "predict_proba"):
+                        model_predictions.append(model.predict_proba(X_test_subset_split))
+                    elif hasattr(model, "decision_function"):
+                        decision_scores = model.decision_function(X_test_subset_split)
+                        probabilities = softmax(decision_scores, axis=1)
+                        model_predictions.append(probabilities)
 
                 row_predictions.append(model_predictions)
 

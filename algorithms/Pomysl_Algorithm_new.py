@@ -1,6 +1,6 @@
 import os
 from itertools import combinations
-
+from scipy.special import softmax
 import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
@@ -80,7 +80,12 @@ class PomyslAlgorithm:
         for grouped_models in self.fit_group_of_models:
             row_preds = []
             for model in grouped_models:
-                row_preds.append(model.predict_proba(X_test))
+                if hasattr(model, "predict_proba"):
+                    row_preds.append(model.predict_proba(X_test))
+                elif hasattr(model, "decision_function"):
+                    decision_scores = model.decision_function(X_test)
+                    probabilities = softmax(decision_scores, axis=1)
+                    row_preds.append(probabilities)
             grouped_predictions.append(row_preds)
         min_max_array = [find_min_max_pairs(gpredict) for gpredict in grouped_predictions]
         aggregated = aggregation_functions.get(self.aggregation_type)(min_max_array)
@@ -95,7 +100,12 @@ class PomyslAlgorithm:
         for grouped_models in self.fit_group_of_models:
             row_preds = []
             for model in grouped_models:
-                row_preds.append(model.predict_proba(X_test))
+                if hasattr(model, "predict_proba"):
+                    row_preds.append(model.predict_proba(X_test))
+                elif hasattr(model, "decision_function"):
+                    decision_scores = model.decision_function(X_test)
+                    probabilities = softmax(decision_scores, axis=1)
+                    row_preds.append(probabilities)
             row_predictions_proba.append(row_preds)
 
         min_max_array = [find_min_max_pairs(gpredict) for gpredict in row_predictions_proba]
