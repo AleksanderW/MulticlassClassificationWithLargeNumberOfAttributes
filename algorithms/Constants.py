@@ -10,8 +10,8 @@ SSh_name = 'SSh_GSE13904'
 
 
 def extract_variables(text):
-    pattern = r'(\w+[_A-Z]+)_s(\w+)_(\w+)_(\w+)_(\w+)'
-    pattern2 = r'(\w+[_A-Z]+)_(\w+)_(\w+)'
+    pattern = r'(\w+[_A-Za-z]+)_s(\w+)_(\w+)_(\w+)_(\w+)'
+    pattern2 = r'(\w+[_A-Za-z]+)_(\w+)_(\w+)'
     match = re.search(pattern, text)
     match2 = re.search(pattern2, text)
     if match:

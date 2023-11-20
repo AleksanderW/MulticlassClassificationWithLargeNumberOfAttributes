@@ -8,7 +8,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-
+from sklearn.tree import DecisionTreeClassifier
 
 from algorithms.Aggregations import A1_aggr, A2_aggr, A3_aggr, A5_aggr, A6_aggr, A7_aggr, A8_aggr, \
     A9_aggr, A10_aggr
@@ -25,11 +25,12 @@ class PomyslAlgorithm:
                 [
                     RandomForestClassifier(n_jobs=-1),
                     ExtraTreesClassifier(n_jobs=-1),
+                    DecisionTreeClassifier(),
                 ],
                 [
-                    KNeighborsClassifier(n_neighbors=1, p=1),
-                    KNeighborsClassifier(n_neighbors=3, p=1),
-                    KNeighborsClassifier(n_neighbors=5, p=1)
+                    KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
+                    KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1),
+                    KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1)
                 ]
             ]
         self.models = models

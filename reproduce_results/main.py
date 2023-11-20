@@ -6,6 +6,7 @@ import pandas as pd
 
 from algorithms.Constants import extract_variables, set_params, check_if_models_exist, create_logs, empty_logs
 from algorithms.Evaluation import evaluate_classifiers
+from algorithms.Pomysl_Algorithm_Entropy import PomyslEntropyAlgorithm
 from algorithms.Pomysl_Algorithm_new import PomyslAlgorithm
 from algorithms.Proposed_Algorithm_new import ProposedAlgorithm
 from algorithms.Settings import datasets, steps, ALG_amount_of_subtables, ALG_aggregations, ALG_models, n_splits, \
@@ -21,17 +22,21 @@ for selector in feature_selectors:
     create_logs(selector)
     for step, n_split, random_state in product(steps, n_splits, random_states):
         clfs_loop = classifiers.copy()
-        clfs_loop += [
-            (
-                ProposedAlgorithm(amount_of_subtables=subtab, aggregation_type=agg,
-                                  order=order, models=ALG_models, table_split=table_split,
-                                  random_state=random_state),
-                f"PROP_ALG_s{subtab}_{agg}_{order}_{table_split}") for agg, subtab, order, table_split in
-            product(ALG_aggregations, ALG_amount_of_subtables, ALG_orders, ALG_split_variant)]
+        # clfs_loop += [
+        #     (
+        #         ProposedAlgorithm(amount_of_subtables=subtab, aggregation_type=agg,
+        #                           order=order, models=ALG_models, table_split=table_split,
+        #                           random_state=random_state),
+        #         f"PROP_ALG_s{subtab}_{agg}_{order}_{table_split}") for agg, subtab, order, table_split in
+        #     product(ALG_aggregations, ALG_amount_of_subtables, ALG_orders, ALG_split_variant)]
 
         clfs_loop += [
             (PomyslAlgorithm(aggregation_type=agg, order=order, random_state=random_state, models=ALG_models),
              f"POM_ALG_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
+
+        clfs_loop += [
+            (PomyslEntropyAlgorithm(aggregation_type=agg, order=order, random_state=random_state, models=ALG_models),
+             f"POM_ENTROPY_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
 
         clfs_loop = set_params(clfs_loop, random_state)
 
