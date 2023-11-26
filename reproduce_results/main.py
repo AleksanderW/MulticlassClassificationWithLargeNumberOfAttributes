@@ -7,6 +7,8 @@ import pandas as pd
 from algorithms.Constants import extract_variables, set_params, check_if_models_exist, create_logs, empty_logs
 from algorithms.Evaluation import evaluate_classifiers
 from algorithms.Pomysl_Algorithm_Entropy import PomyslEntropyAlgorithm
+from algorithms.Pomysl_Algorithm_Stacking import PomyslStackingAlgorithm
+from algorithms.Pomysl_Algorithm_Stacking_Entropy import PomyslStackingEntropyAlgorithm
 from algorithms.Pomysl_Algorithm_new import PomyslAlgorithm
 from algorithms.Proposed_Algorithm_new import ProposedAlgorithm
 from algorithms.Settings import datasets, steps, ALG_amount_of_subtables, ALG_aggregations, ALG_models, n_splits, \
@@ -38,6 +40,13 @@ for selector in feature_selectors:
             (PomyslEntropyAlgorithm(aggregation_type=agg, order=order, random_state=random_state, models=ALG_models),
              f"POM_ENTROPY_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
 
+        clfs_loop += [
+            (PomyslStackingAlgorithm(aggregation_type=agg, order=order, random_state=random_state, models=ALG_models),
+             f"POM_STACKING_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
+
+        clfs_loop += [
+            (PomyslStackingEntropyAlgorithm(aggregation_type=agg, order=order, random_state=random_state, models=ALG_models),
+             f"POM_StackingEntropy_{agg}_{order}") for agg, order in product(ALG_aggregations, ALG_orders)]
         clfs_loop = set_params(clfs_loop, random_state)
 
         for dataset in datasets:

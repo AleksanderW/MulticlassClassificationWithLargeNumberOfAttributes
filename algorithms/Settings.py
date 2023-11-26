@@ -62,15 +62,15 @@ classifiers = [
     (RandomForestClassifier(n_jobs=-1), 'RND_FST'),
     (DecisionTreeClassifier(criterion='entropy'), 'DEC_TRE'),
     (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
-    # (StackingClassifier(
-    #     estimators=[('rf', RandomForestClassifier(n_jobs=-1)),
-    #                 ('svc', SVC(kernel="linear", probability=True)),
-    #                 ('dt', DecisionTreeClassifier()),
-    #                 ('mlp', MLPClassifier(max_iter=2000)),
-    #                 ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
-    #                 ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
-    #                 ('knn5', KNeighborsClassifier(n_neighbors=5, p=1))],
-    #     final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
+    (StackingClassifier(
+        estimators=[('rf', RandomForestClassifier(n_jobs=-1)),
+                    ('svc', SVC(kernel="linear", probability=True)),
+                    ('dt', DecisionTreeClassifier()),
+                    ('mlp', MLPClassifier(max_iter=2000)),
+                    ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
+                    ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
+                    ('knn5', KNeighborsClassifier(n_neighbors=5, p=1))],
+        final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
 ]
 
 # Parametry poniżej dotyczą Proponowanego Algorytmu

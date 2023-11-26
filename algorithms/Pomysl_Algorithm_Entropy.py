@@ -94,18 +94,19 @@ class PomyslEntropyAlgorithm:
 
             metrics.append(model_metrics)
 
-        for i, model_list in enumerate(self.models):
-            for j, model in enumerate(model_list):
-                acc_mean = np.mean([fold['acc'] for fold in metrics[i][j]])
-                log_loss_mean = np.mean([fold['log_loss'] for fold in metrics[i][j]])
-                roc_auc_mean = np.mean([fold['roc_auc'] for fold in metrics[i][j]])
-                model_str = str(model).ljust(70)
-                print(
-                    f"{model_str} - \t Mean Accuracy: {acc_mean:.4f},\t Mean Roc Auc: {roc_auc_mean:.4f},\t Mean Log Loss: {log_loss_mean:.4f}")
-            print()
+        # for i, model_list in enumerate(self.models):
+        #     for j, model in enumerate(model_list):
+        #         acc_mean = np.mean([fold['acc'] for fold in metrics[i][j]])
+        #         log_loss_mean = np.mean([fold['log_loss'] for fold in metrics[i][j]])
+        #         roc_auc_mean = np.mean([fold['roc_auc'] for fold in metrics[i][j]])
+        #         model_str = str(model).ljust(70)
+        #         print(
+        #             f"{model_str} - \t Mean Accuracy: {acc_mean:.4f},\t Mean Roc Auc: {roc_auc_mean:.4f},\t Mean Log Loss: {log_loss_mean:.4f}")
+        #     print()
+
         for i, model_list in enumerate(self.models):
             worst_model_index = np.argmin(
-                [np.mean([fold['log_loss'] for fold in metrics[i][j]]) for j in range(len(model_list))])
+                [np.mean([fold['roc_auc'] for fold in metrics[i][j]]) for j in range(len(model_list))])
             self.models[i].pop(worst_model_index)
 
         row_fit_models = []
