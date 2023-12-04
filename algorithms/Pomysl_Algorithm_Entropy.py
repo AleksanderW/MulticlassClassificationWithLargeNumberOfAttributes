@@ -81,6 +81,7 @@ class PomyslEntropyAlgorithm:
                     y_pred_proba_fold = model.predict_proba(X_test_fold)
                     acc_fold = accuracy_score(y_test_fold, y_pred_fold)
                     roc_auc_fold = roc_auc_score(y_test_fold, y_pred_proba_fold, multi_class="ovo", labels=self.y_labels)
+                    # TODO do czego używany jest log_loss? Czy na pewno mamy entropię?
                     loss = log_loss(y_test_fold, y_pred_proba_fold, labels=self.y_labels)
 
                     fold_metrics.append({
@@ -131,6 +132,7 @@ class PomyslEntropyAlgorithm:
                     row_preds.append(model.predict_proba(X_test))
                 elif hasattr(model, "decision_function"):
                     decision_scores = model.decision_function(X_test)
+                    # TODO dlaczego używamy funkcji softmax?
                     probabilities = softmax(decision_scores, axis=1)
                     row_preds.append(probabilities)
             grouped_predictions.append(row_preds)
