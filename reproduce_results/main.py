@@ -32,6 +32,7 @@ from algorithms.Settings import (
     ALG_split_variant,
     feature_selectors,
 )
+from algorithms.Stacking_Entropy import StackingEntropy
 
 path = op.join("..", "results")
 if not os.path.exists(path):
@@ -116,6 +117,15 @@ for selector in feature_selectors:
                 f"POM_StackingEntropy_{agg}_{order}",
             )
             for agg, order in product(ALG_aggregations, ALG_orders)
+        ]
+        clfs_loop += [
+            (
+                StackingEntropy(
+                    random_state=random_state,
+                    models=ALG_models,
+                ),
+                f"STACKING_Entropy",
+            )
         ]
         clfs_loop = set_params(clfs_loop, random_state)
 
