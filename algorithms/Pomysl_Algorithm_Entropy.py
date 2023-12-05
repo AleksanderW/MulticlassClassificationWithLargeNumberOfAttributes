@@ -149,9 +149,9 @@ class PomyslEntropyAlgorithm:
 
         # Select the best-performing models based on mean ROC AUC score
         for i, model_list in enumerate(self.models):
-            worst_model_index = np.argmin(
+            worst_model_index = np.argmax(
                 [
-                    np.mean([fold["roc_auc"] for fold in metrics[i][j]])
+                    np.mean([fold["log_loss"] for fold in metrics[i][j]])
                     for j in range(len(model_list))
                 ]
             )
