@@ -10,16 +10,36 @@ SSh_name = 'SSh_GSE13904'
 
 
 def extract_variables(text):
+    """
+    Extracts variables from the given text using regular expressions.
+
+    Args:
+        text (str): The input text.
+
+    Returns:
+        tuple: A tuple containing the extracted variables.
+    """
+
+    # Define the regular expression patterns
     pattern = r'(\w+[_A-Za-z]+)_s(\w+)_(\w+)_(\w+)_(\w+)'
     pattern2 = r'(\w+[_A-Za-z]+)_(\w+)_(\w+)'
+
+    # Search for matches using the first pattern
     match = re.search(pattern, text)
-    match2 = re.search(pattern2, text)
+
+    # If a match is found, return the matched groups
     if match:
-        return match.group(1), match.group(2), match.group(3), match.group(4), match.group(5)
-    elif match2:
+        return match.groups(default='')
+
+    # If no match is found using the first pattern, search using the second pattern
+    match2 = re.search(pattern2, text)
+
+    # If a match is found using the second pattern, return the specific groups
+    if match2:
         return match2.group(1), "", match2.group(2), match2.group(3), ""
-    else:
-        return text, '', '', '', ''
+
+    # If no match is found using either pattern, return default values
+    return text, '', '', '', ''
 
 
 if __name__ == "__main__":
@@ -38,6 +58,17 @@ if __name__ == "__main__":
 
 
 def set_params(classifiers, random_state):
+    """
+    Set the random_state parameter for each classifier and model in the list.
+
+    Args:
+        classifiers (list): A list of tuples containing the classifiers and their names.
+        random_state (int): The random state parameter to set.
+
+    Returns:
+        list: A list of tuples that were not able to set the random_state parameter.
+
+    """
     table = []
     for clf_tuple in classifiers:
         clf, clf_name = clf_tuple
@@ -59,15 +90,29 @@ def set_params(classifiers, random_state):
 
 
 def check_if_models_exist(dataset, random_state, step, selector):
-    folder_path = os.path.join("..", ".cache", f"{selector}_models")
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    """
+    Check if the models exist for a given dataset, random state, step, and selector.
 
+    Args:
+        dataset (str): The name of the dataset.
+        random_state (int): The random state.
+        step (int): The step value (used for RFECV and RFE selectors).
+        selector (str): The selector type.
+
+    Returns:
+        list: A list of missing model iterations.
+    """
+    # Create the folder path for the models
+    folder_path = os.path.join("..", ".cache", f"{selector}_models")
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Initialize list to store missing models
     missing_models = []
 
+    # Check for missing models
     for iteration in range(5):
         model_name = f"{dataset}_{random_state}"
-        if selector == "RFECV" or selector == "RFE":
+        if selector in ["RFECV", "RFE"]:
             model_name += f"_{step}_{iteration}.sav"
         elif selector == "StabilitySelection":
             model_name += f"_{iteration}.sav"
@@ -75,21 +120,16 @@ def check_if_models_exist(dataset, random_state, step, selector):
         if not os.path.exists(model_path):
             missing_models.append(iteration)
 
+    # Log missing models if any
     if missing_models:
-        log_message = ""
-        for iteration in missing_models:
-            log_message += f"Dataset: {dataset}, random_state: {random_state},"
-            if selector == "RFECV" or selector == "RFE":
-                log_message += f" step: {step},"
-            log_message += f" iteration: {iteration}\n"
+        log_message = "\n".join([
+            f"Dataset: {dataset}, random_state: {random_state},{' step: ' + str(step) if selector in ['RFECV', 'RFE'] else ''} iteration: {iteration}"
+            for iteration in missing_models
+        ])
 
         log_file_path = "missing_models_log.txt"
-        if os.path.exists(log_file_path):
-            with open(log_file_path, "a") as log_file:
-                log_file.write("\n" + log_message)
-        else:
-            with open(log_file_path, "w") as log_file:
-                log_file.write(f"Missing {selector} models:\n" + log_message)
+        with open(log_file_path, "a" if os.path.exists(log_file_path) else "w") as log_file:
+            log_file.write(f"Missing {selector} models:\n{log_message}\n")
 
     return missing_models
 

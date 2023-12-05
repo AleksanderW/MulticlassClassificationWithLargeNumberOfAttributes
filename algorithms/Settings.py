@@ -64,12 +64,11 @@ classifiers = [
     (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
     (StackingClassifier(
         estimators=[('rf', RandomForestClassifier(n_jobs=-1)),
-                    ('svc', SVC(kernel="linear", probability=True)),
+                    ('ext', ExtraTreesClassifier(n_jobs=-1)),
                     ('dt', DecisionTreeClassifier()),
-                    ('mlp', MLPClassifier(max_iter=2000)),
-                    ('knn1', KNeighborsClassifier(n_neighbors=1, p=1)),
-                    ('knn3', KNeighborsClassifier(n_neighbors=3, p=1)),
-                    ('knn5', KNeighborsClassifier(n_neighbors=5, p=1))],
+                    ('knn1', KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1)),
+                    ('knn3', KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1)),
+                    ('knn5', KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1))],
         final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
 ]
 
@@ -126,13 +125,13 @@ ALG_models = [
     [
         RandomForestClassifier(n_jobs=-1),
         ExtraTreesClassifier(n_jobs=-1),
-        DecisionTreeClassifier()
+        DecisionTreeClassifier(),
     ],
     [
         KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
         KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1),
-        KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1)
-    ]
+        KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
+    ],
 ]
 # from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, AdaBoostClassifier
 # from sklearn.tree import DecisionTreeClassifier
