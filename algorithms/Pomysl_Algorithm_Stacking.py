@@ -52,19 +52,6 @@ class PomyslStackingAlgorithm:
         models=None,
     ):
 
-        if models is None:
-            models = [
-                [
-                    RandomForestClassifier(n_jobs=-1),
-                    ExtraTreesClassifier(n_jobs=-1),
-                    DecisionTreeClassifier(),
-                ],
-                [
-                    KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
-                    KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1),
-                    KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
-                ],
-            ]
         self.models = models
         self.order = order
         self.aggregation_type = aggregation_type
@@ -74,6 +61,19 @@ class PomyslStackingAlgorithm:
         self.y_labels = None
         self.dataset = dataset
         self.iteration = iteration
+        if models is None:
+            self.models = [
+                [
+                    RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
+                    ExtraTreesClassifier(n_jobs=-1, random_state=self.random_state),
+                    DecisionTreeClassifier(random_state=self.random_state),
+                ],
+                [
+                    KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
+                    KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1),
+                    KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
+                ],
+            ]
 
     def get_params(self):
         return {
@@ -122,7 +122,7 @@ class PomyslStackingAlgorithm:
             # Create a stacking classifier using the models and fit it to the training data
             stacking_classifier = StackingClassifier(
                 estimators=models_for_row,
-                final_estimator=LogisticRegression(n_jobs=-1),
+                final_estimator=LogisticRegression(n_jobs=-1, random_state=self.random_state),
                 n_jobs=-1,
             )
             stacking_classifier.fit(X_train, y_train)

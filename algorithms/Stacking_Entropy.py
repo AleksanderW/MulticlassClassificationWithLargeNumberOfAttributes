@@ -20,12 +20,18 @@ class StackingEntropy:
             n_jobs=-1,
             models=None,
     ):
+        self.models = models
+        self.random_state = random_state
+        self.subtable_col_indexes = None
+        self.fit_classifier = None
+        self.y_labels = None
+        self.n_jobs = n_jobs
         if models is None:
-            models = [
+            self.models = [
                 [
-                    RandomForestClassifier(n_jobs=-1),
-                    ExtraTreesClassifier(n_jobs=-1),
-                    DecisionTreeClassifier(),
+                    RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
+                    ExtraTreesClassifier(n_jobs=-1, random_state=self.random_state),
+                    DecisionTreeClassifier(random_state=self.random_state),
                 ],
                 [
                     KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
@@ -33,13 +39,6 @@ class StackingEntropy:
                     KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
                 ],
             ]
-        self.models = models
-        self.random_state = random_state
-        self.subtable_col_indexes = None
-        self.fit_classifier = None
-        self.y_labels = None
-        self.n_jobs = n_jobs
-
     def get_params(self):
         return {
             "random_state": self.random_state,
@@ -86,7 +85,7 @@ class StackingEntropy:
 
         stacking_classifier = StackingClassifier(
             estimators=selected_models,
-            final_estimator=LogisticRegression(n_jobs=self.n_jobs),
+            final_estimator=LogisticRegression(n_jobs=self.n_jobs, random_state=self.random_state),
             n_jobs=self.n_jobs,
         )
         stacking_classifier.fit(X_train, y_train)

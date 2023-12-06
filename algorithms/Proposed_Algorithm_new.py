@@ -30,30 +30,17 @@ from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisi
 
 class ProposedAlgorithm:
     def __init__(
-        self,
-        amount_of_subtables=2,
-        aggregation_type="A1",
-        random_state=42,
-        order="xuyager",
-        dataset="",
-        iteration="",
-        table_split=2,
-        models=None,
+            self,
+            amount_of_subtables=2,
+            aggregation_type="A1",
+            random_state=42,
+            order="xuyager",
+            dataset="",
+            iteration="",
+            table_split=2,
+            models=None,
     ):
 
-        if models is None:
-            models = [
-                [
-                    RandomForestClassifier(n_jobs=-1),
-                    ExtraTreesClassifier(n_jobs=-1),
-                    DecisionTreeClassifier(),
-                ],
-                [
-                    KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
-                    KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1),
-                    KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
-                ],
-            ]
         self.models = models
         self.table_split = table_split
         self.order = order
@@ -65,6 +52,20 @@ class ProposedAlgorithm:
         self.y_labels = None
         self.dataset = dataset
         self.iteration = iteration
+
+        if models is None:
+            self.models = [
+                [
+                    RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
+                    ExtraTreesClassifier(n_jobs=-1, random_state=self.random_state),
+                    DecisionTreeClassifier(random_state=self.random_state),
+                ],
+                [
+                    KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
+                    KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1),
+                    KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
+                ],
+            ]
 
     def get_params(self):
         return {
@@ -148,8 +149,8 @@ class ProposedAlgorithm:
 
             if len(attributes) % self.amount_of_subtables != 0:
                 remaining_attributes = attributes[
-                    attributes_per_subtable * self.amount_of_subtables :
-                ]
+                                       attributes_per_subtable * self.amount_of_subtables:
+                                       ]
                 for i, attr in enumerate(remaining_attributes):
                     col_indexes[i] += (attr,)
 
@@ -362,7 +363,7 @@ class ProposedAlgorithm:
 
 
 def warning_log(
-    dataset, iteration, subtables, random_state, aggregation, tuples, order
+        dataset, iteration, subtables, random_state, aggregation, tuples, order
 ):
     all_tuples = []
     for tup in tuples:
@@ -387,9 +388,9 @@ def warning_log(
     ]  # przejrzystość wyników
     if all_tuples:
         message = (
-            f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}, "
-            + "equal tuples: "
-            + f"{all_tuples}"
+                f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}, "
+                + "equal tuples: "
+                + f"{all_tuples}"
         )
         log_file_path = "log_file.txt"
         if os.path.exists(log_file_path):
@@ -407,7 +408,7 @@ def warning_log(
 
 
 def shuffle_with_return_log(
-    dataset, iteration, subtables, random_state, aggregation, order, columns
+        dataset, iteration, subtables, random_state, aggregation, order, columns
 ):
     message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}: column amount{columns}"
     shuffle_path = "shuffle_log.txt"
@@ -425,7 +426,7 @@ def shuffle_with_return_log(
 
 
 def split3_features_log(
-    dataset, iteration, subtables, random_state, aggregation, less_tables
+        dataset, iteration, subtables, random_state, aggregation, less_tables
 ):
     message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} : subtables amount for {subtables} subtables set to the max amount of features ({less_tables})"
     shuffle_path = "table_split3_log.txt"
