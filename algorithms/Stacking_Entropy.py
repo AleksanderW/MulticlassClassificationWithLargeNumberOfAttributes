@@ -15,10 +15,10 @@ from sklearn.tree import DecisionTreeClassifier
 
 class StackingEntropy:
     def __init__(
-            self,
-            random_state=42,
-            n_jobs=-1,
-            models=None,
+        self,
+        random_state=42,
+        n_jobs=-1,
+        models=None,
     ):
         self.models = models
         self.random_state = random_state
@@ -39,6 +39,7 @@ class StackingEntropy:
                     KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
                 ],
             ]
+
     def get_params(self):
         return {
             "random_state": self.random_state,
@@ -49,43 +50,69 @@ class StackingEntropy:
             setattr(self, parameter, value)
 
     def fit(self, X_train, y_train):
+        """
+        Trains the classifier on the given training data.
+
+        Args:
+            X_train (array-like): The input features of the training data.
+            y_train (array-like): The target labels of the training data.
+
+        Returns:
+            None
+        """
         self.y_labels = np.unique(y_train)
         skf = StratifiedKFold(shuffle=True, random_state=self.random_state)
         selected_models = []
 
+        # Iterate over the list of models
         for model_list in self.models:
             model_mean_losses = []
 
+            # Iterate over each model in the current list
             for model in model_list:
                 fold_losses = []
 
+                # Perform stratified k-fold cross-validation
                 for train_index, val_index in skf.split(X_train, y_train):
                     X_train_split, X_val = X_train[train_index], X_train[val_index]
                     y_train_split, y_val = y_train[train_index], y_train[val_index]
 
+                    # Generate a unique model name based on its class name and parameters
                     model_name = f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}"
 
+                    # Fit the model on the training split and predict probabilities on the validation split
                     model.fit(X_train_split, y_train_split)
-                    y_val_pred_proba = model.predict_proba(X_val) if hasattr(model, "predict_proba") else softmax(
-                        model.decision_function(X_val), axis=1)
+                    y_val_pred_proba = (
+                        model.predict_proba(X_val)
+                        if hasattr(model, "predict_proba")
+                        else softmax(model.decision_function(X_val), axis=1)
+                    )
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
                     fold_losses.append(loss)
 
                 mean_loss = np.mean(fold_losses)
                 model_mean_losses.append((model_name, mean_loss))
 
+            # Remove the worst-performing model from the list
             worst_model_name = max(model_mean_losses, key=lambda x: x[1])[0]
             worst_model_index = next(
-                i for i, model in enumerate(model_list) if model.__class__.__name__ in worst_model_name)
+                i
+                for i, model in enumerate(model_list)
+                if model.__class__.__name__ in worst_model_name
+            )
             del model_list[worst_model_index]
 
+            # Add the remaining models to the selected models list
             for model in model_list:
                 model_name = f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}"
                 selected_models.append((model_name, model))
 
+        # Create a stacking classifier with the selected models as estimators
         stacking_classifier = StackingClassifier(
             estimators=selected_models,
-            final_estimator=LogisticRegression(n_jobs=self.n_jobs, random_state=self.random_state),
+            final_estimator=LogisticRegression(
+                n_jobs=self.n_jobs, random_state=self.random_state
+            ),
             n_jobs=self.n_jobs,
         )
         stacking_classifier.fit(X_train, y_train)
