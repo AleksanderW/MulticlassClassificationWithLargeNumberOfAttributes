@@ -16,6 +16,7 @@ from algorithms.Pomysl_Algorithm_Entropy import PomyslEntropyAlgorithm
 from algorithms.Pomysl_Algorithm_Stacking import PomyslStackingAlgorithm
 from algorithms.Pomysl_Algorithm_Stacking_Entropy import PomyslStackingEntropyAlgorithm
 from algorithms.Pomysl_Algorithm_new import PomyslAlgorithm
+from algorithms.Stacking_Entropy import StackingEntropy
 from algorithms.Proposed_Algorithm_new import ProposedAlgorithm
 from algorithms.Settings import (
     datasets,
@@ -32,7 +33,6 @@ from algorithms.Settings import (
     ALG_split_variant,
     feature_selectors,
 )
-from algorithms.Stacking_Entropy import StackingEntropy
 
 path = op.join("..", "results")
 if not os.path.exists(path):
@@ -93,31 +93,44 @@ for selector in feature_selectors:
             for agg, order in product(ALG_aggregations, ALG_orders)
         ]
 
-        clfs_loop += [
-            (
-                PomyslStackingAlgorithm(
-                    aggregation_type=agg,
-                    order=order,
-                    random_state=random_state,
-                    models=ALG_models,
-                ),
-                f"POM_STACKING_{agg}_{order}",
-            )
-            for agg, order in product(ALG_aggregations, ALG_orders)
-        ]
-
-        clfs_loop += [
-            (
-                PomyslStackingEntropyAlgorithm(
-                    aggregation_type=agg,
-                    order=order,
-                    random_state=random_state,
-                    models=ALG_models,
-                ),
-                f"POM_StackingEntropy_{agg}_{order}",
-            )
-            for agg, order in product(ALG_aggregations, ALG_orders)
-        ]
+        # clfs_loop += [
+        #     (
+        #         PomyslStackingAlgorithm(
+        #             aggregation_type=agg,
+        #             order=order,
+        #             random_state=random_state,
+        #             models=ALG_models,
+        #         ),
+        #         f"POM_STACKING_{agg}_{order}",
+        #     )
+        #     for agg, order in product(ALG_aggregations, ALG_orders)
+        # ]
+        #
+        # clfs_loop += [
+        #     (
+        #         PomyslStackingAlgorithm(
+        #             aggregation_type=agg,
+        #             order=order,
+        #             random_state=random_state,
+        #             models=ALG_models,
+        #         ),
+        #         f"POM_STACKING_{agg}_{order}",
+        #     )
+        #     for agg, order in product(ALG_aggregations, ALG_orders)
+        # ]
+        #
+        # clfs_loop += [
+        #     (
+        #         PomyslStackingEntropyAlgorithm(
+        #             aggregation_type=agg,
+        #             order=order,
+        #             random_state=random_state,
+        #             models=ALG_models,
+        #         ),
+        #         f"POM_StackingEntropy_{agg}_{order}",
+        #     )
+        #     for agg, order in product(ALG_aggregations, ALG_orders)
+        # ]
         clfs_loop += [
             (
                 StackingEntropy(

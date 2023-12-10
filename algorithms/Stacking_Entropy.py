@@ -15,10 +15,10 @@ from sklearn.tree import DecisionTreeClassifier
 
 class StackingEntropy:
     def __init__(
-        self,
-        random_state=42,
-        n_jobs=-1,
-        models=None,
+            self,
+            random_state=42,
+            n_jobs=-1,
+            models=None,
     ):
         self.models = models
         self.random_state = random_state
@@ -64,46 +64,62 @@ class StackingEntropy:
         skf = StratifiedKFold(shuffle=True, random_state=self.random_state)
         selected_models = []
 
-        # Iterate over the list of models
+        # Iterate over each list of models
         for model_list in self.models:
+            # List to store mean losses for each model
             model_mean_losses = []
 
-            # Iterate over each model in the current list
+            # Iterate over each model in the list
             for model in model_list:
+                model_attributes = model.get_params()
+                if "random_state" in model_attributes:
+                    setattr(self, "random_state", model_attributes["random_state"])
+
+                # List to store losses for each fold
                 fold_losses = []
 
-                # Perform stratified k-fold cross-validation
+                # Perform k-fold cross-validation
                 for train_index, val_index in skf.split(X_train, y_train):
+                    # Split the data into training and validation sets
                     X_train_split, X_val = X_train[train_index], X_train[val_index]
                     y_train_split, y_val = y_train[train_index], y_train[val_index]
 
-                    # Generate a unique model name based on its class name and parameters
-                    model_name = f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}"
 
                     # Fit the model on the training split and predict probabilities on the validation split
                     model.fit(X_train_split, y_train_split)
-                    y_val_pred_proba = (
-                        model.predict_proba(X_val)
-                        if hasattr(model, "predict_proba")
-                        else softmax(model.decision_function(X_val), axis=1)
-                    )
+
+                    # Predict probabilities for the validation data
+                    if hasattr(model, "predict_proba"):
+                        y_val_pred_proba = model.predict_proba(X_val)
+                    elif hasattr(model, "decision_function"):
+                        decision_values = model.decision_function(X_val)
+                        y_val_pred_proba = softmax(decision_values, axis=1)
+
+                    # Calculate the loss using log loss
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
+
+                    # Append the loss to the fold_losses list
                     fold_losses.append(loss)
 
+                # Calculate the mean loss for the model
                 mean_loss = np.mean(fold_losses)
-                model_mean_losses.append((model_name, mean_loss))
 
-            # Remove the worst-performing model from the list
-            worst_model_name = max(model_mean_losses, key=lambda x: x[1])[0]
-            worst_model_index = next(
-                i
-                for i, model in enumerate(model_list)
-                if model.__class__.__name__ in worst_model_name
-            )
-            del model_list[worst_model_index]
+                # Append the model name and mean loss to the model_mean_losses list
+                model_mean_losses.append((model, mean_loss))
+
+            # Calculate the average mean loss
+            average_loss = sum(loss for _, loss in model_mean_losses) / len(model_mean_losses)
+
+            # Sort models based on mean loss in ascending order
+            sorted_losses = sorted(model_mean_losses, key=lambda x: x[1])
+            # Keep at least the top two models
+            filtered_models = [model for model, loss in sorted_losses[:2]]
+
+            # Include additional models whose mean loss is below or equal to the average
+            filtered_models += [model for model, loss in sorted_losses[2:] if loss <= average_loss]
 
             # Add the remaining models to the selected models list
-            for model in model_list:
+            for model in filtered_models:
                 model_name = f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}"
                 selected_models.append((model_name, model))
 

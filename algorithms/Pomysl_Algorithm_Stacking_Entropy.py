@@ -40,13 +40,13 @@ class PomyslStackingEntropyAlgorithm:
     """
 
     def __init__(
-            self,
-            aggregation_type="A1",
-            random_state=42,
-            order="xuyager",
-            dataset="",
-            iteration="",
-            models=None,
+        self,
+        aggregation_type="A1",
+        random_state=42,
+        order="xuyager",
+        dataset="",
+        iteration="",
+        models=None,
     ):
 
         self.models = models
@@ -71,6 +71,7 @@ class PomyslStackingEntropyAlgorithm:
                     KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1),
                 ],
             ]
+
     def get_params(self):
         return {
             "aggregation_type": self.aggregation_type,
@@ -115,6 +116,10 @@ class PomyslStackingEntropyAlgorithm:
 
             # Iterate over each model in the list
             for model in model_list:
+                model_attributes = model.get_params()
+                if "random_state" in model_attributes:
+                    setattr(self, "random_state", model_attributes["random_state"])
+
                 # List to store losses for each fold
                 fold_losses = []
 
@@ -123,9 +128,6 @@ class PomyslStackingEntropyAlgorithm:
                     # Split the data into training and validation sets
                     X_train_split, X_val = X_train[train_index], X_train[val_index]
                     y_train_split, y_val = y_train[train_index], y_train[val_index]
-
-                    # Generate a unique model name based on its parameters
-                    model_name = f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}"
 
                     # Fit the model to the training data
                     model.fit(X_train_split, y_train_split)
@@ -139,33 +141,36 @@ class PomyslStackingEntropyAlgorithm:
 
                     # Calculate the loss using log loss
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
+
                     # Append the loss to the fold_losses list
                     fold_losses.append(loss)
 
                 # Calculate the mean loss for the model
                 mean_loss = np.mean(fold_losses)
-                # Append the model name and mean loss to the model_mean_losses list
-                model_mean_losses.append((model_name, mean_loss))
 
-            # Sort the model_mean_losses list based on mean loss
-            model_mean_losses.sort(key=lambda x: x[1])
-            # Get the name and index of the worst performing model
-            worst_model_name = model_mean_losses[-1][0]
-            worst_model_index = next(
-                i
-                for i, model in enumerate(model_list)
-                if model.__class__.__name__ in worst_model_name
-            )
-            # Remove the worst performing model from the list
-            del model_list[worst_model_index]
+                # Append the model name and mean loss to the model_mean_losses list
+                model_mean_losses.append((model, mean_loss))
+
+            # Calculate the average mean loss
+            average_loss = sum(loss for _, loss in model_mean_losses) / len(model_mean_losses)
+
+            # Sort models based on mean loss in ascending order
+            sorted_losses = sorted(model_mean_losses, key=lambda x: x[1])
+            # Keep at least the top two models
+            filtered_models = [model for model, loss in sorted_losses[:2]]
+
+            # Include additional models whose mean loss is below or equal to the average
+            filtered_models += [model for model, loss in sorted_losses[2:] if loss <= average_loss]
 
             # Create a list of (model name, model) tuples for the remaining models
             models_for_row = [
                 (
-                    f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}",
+                    f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}".replace(
+                        "__", "_"
+                    ),
                     model,
                 )
-                for model in model_list
+                for model in filtered_models
             ]
 
             # Create a stacking classifier using the remaining models
@@ -218,7 +223,8 @@ class PomyslStackingEntropyAlgorithm:
         for stacked_model in self.fit_group_of_models:
             # Predict probabilities or decision function values for X_test using each model
             row_preds = [
-                model.predict_proba(X_test) if hasattr(model, "predict_proba")
+                model.predict_proba(X_test)
+                if hasattr(model, "predict_proba")
                 else softmax(model.decision_function(X_test), axis=1)
                 # Otherwise, use softmax on decision function values
                 for model in stacked_model.estimators_

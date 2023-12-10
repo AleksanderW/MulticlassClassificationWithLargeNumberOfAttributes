@@ -35,13 +35,13 @@ class PomyslEntropyAlgorithm:
     """
 
     def __init__(
-        self,
-        aggregation_type="A1",
-        random_state=42,
-        order="xuyager",
-        dataset="",
-        iteration="",
-        models=None,
+            self,
+            aggregation_type="A1",
+            random_state=42,
+            order="xuyager",
+            dataset="",
+            iteration="",
+            models=None,
     ):
 
         self.models = models
@@ -87,75 +87,95 @@ class PomyslEntropyAlgorithm:
         )
 
     def fit(self, X_train, y_train):
-        # Store unique labels from the training data
+        """
+        Fit the stacking classifiers to the training data.
+
+        Parameters:
+        - X_train: array-like, shape (n_samples, n_features)
+            The training input samples.
+        - y_train: array-like, shape (n_samples,)
+            The target values.
+        """
+
+        # Calculate unique labels in the training data
         self.y_labels = np.unique(y_train)
 
-        # Initialize StratifiedKFold with 5 splits
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=self.random_state)
+        # Create a stratified k-fold object
+        skf = StratifiedKFold(shuffle=True, random_state=self.random_state)
+        chosen_models = []
 
-        # Initialize an empty list to store metrics for each model
-        metrics = []
-
-        # Iterate over each model list
+        # Iterate over each list of models
         for model_list in self.models:
-            # Initialize an empty list to store metrics for each fold of the current model
-            model_metrics = []
+            # List to store mean losses for each model
+            model_mean_losses = []
 
-            # Perform stratified k-fold cross-validation
-            for train_index, test_index in skf.split(X_train, y_train):
-                # Split the data into training and testing folds
-                X_train_fold, X_test_fold = X_train[train_index], X_train[test_index]
-                y_train_fold, y_test_fold = y_train[train_index], y_train[test_index]
+            # Iterate over each model in the list
+            for model in model_list:
+                # Get the attributes of the model
+                model_attributes = model.get_params()
 
-                # Initialize an empty list to store metrics for each model in the current fold
-                fold_metrics = []
+                # Set the random state attribute if it exists
+                if "random_state" in model_attributes:
+                    setattr(self, "random_state", model_attributes["random_state"])
 
-                # Iterate over each model in the current model list
-                for model in model_list:
-                    # Fit the model on the training fold
-                    model.fit(X_train_fold, y_train_fold)
+                # List to store losses for each fold
+                fold_losses = []
 
-                    # Make predictions on the testing fold
-                    y_pred_fold = model.predict(X_test_fold)
-                    y_pred_proba_fold = model.predict_proba(X_test_fold)
+                # Perform k-fold cross-validation
+                for train_index, val_index in skf.split(X_train, y_train):
+                    # Split the data into training and validation sets
+                    X_train_split, X_val = X_train[train_index], X_train[val_index]
+                    y_train_split, y_val = y_train[train_index], y_train[val_index]
 
-                    # Calculate evaluation metrics for the current fold and model
-                    acc_fold = accuracy_score(y_test_fold, y_pred_fold)
-                    roc_auc_fold = roc_auc_score(
-                        y_test_fold,
-                        y_pred_proba_fold,
-                        multi_class="ovo",
-                        labels=self.y_labels,
-                    )
-                    loss = log_loss(
-                        y_test_fold, y_pred_proba_fold, labels=self.y_labels
-                    )
+                    # Fit the model to the training data
+                    model.fit(X_train_split, y_train_split)
 
-                    # Append the metrics for the current model to the fold metrics list
-                    fold_metrics.append(
-                        {
-                            "model": model,
-                            "acc": acc_fold,
-                            "roc_auc": roc_auc_fold,
-                            "log_loss": loss,
-                        }
-                    )
+                    # Predict probabilities for the validation data
+                    if hasattr(model, "predict_proba"):
+                        y_val_pred_proba = model.predict_proba(X_val)
+                    elif hasattr(model, "decision_function"):
+                        decision_values = model.decision_function(X_val)
+                        y_val_pred_proba = softmax(decision_values, axis=1)
 
-                # Append the fold metrics to the model metrics list
-                model_metrics.append(fold_metrics)
+                    # Calculate the loss using log loss
+                    loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
 
-            # Append the model metrics to the overall metrics list
-            metrics.append(model_metrics)
+                    # Append the loss to the fold_losses list
+                    fold_losses.append(loss)
 
-        # Select the best-performing models based on mean ROC AUC score
-        for i, model_list in enumerate(self.models):
-            worst_model_index = np.argmax(
-                [
-                    np.mean([fold["log_loss"] for fold in metrics[i][j]])
-                    for j in range(len(model_list))
-                ]
-            )
-            self.models[i].pop(worst_model_index)
+                # Calculate the mean loss for the model
+                mean_loss = np.mean(fold_losses)
+
+                # Append the model name and mean loss to the model_mean_losses list
+                model_mean_losses.append((model, mean_loss))
+
+            # Calculate the average mean loss
+            average_loss = sum(loss for _, loss in model_mean_losses) / len(model_mean_losses)
+
+            # Sort models based on mean loss in ascending order
+            sorted_losses = sorted(model_mean_losses, key=lambda x: x[1])
+            # Keep at least the top two models
+            filtered_models = [model for model, loss in sorted_losses[:2]]
+
+            # Include additional models whose mean loss is below or equal to the average
+            filtered_models += [model for model, loss in sorted_losses[2:] if loss <= average_loss]
+
+            chosen_models.append(filtered_models)
+
+        row_fit_models = []
+
+        for model_list in chosen_models:
+            models_for_row = []
+
+            for model in model_list:
+                # Fit the model to the training data
+                model.fit(X_train, y_train)
+
+                models_for_row.append(model)
+
+            row_fit_models.append(models_for_row)
+
+        self.fit_group_of_models = row_fit_models
 
         # for i, model_list in enumerate(self.models):
         #     for j, model in enumerate(model_list):
@@ -166,16 +186,6 @@ class PomyslEntropyAlgorithm:
         #         print(
         #             f"{model_str} - \t Mean Accuracy: {acc_mean:.4f},\t Mean Roc Auc: {roc_auc_mean:.4f},\t Mean Log Loss: {log_loss_mean:.4f}")
         #     print()
-
-        # Fit the remaining models on the entire training set
-        row_fit_models = []
-        for model_list in self.models:
-            models_for_row = []
-            for model in model_list:
-                model.fit(X_train, y_train)
-                models_for_row.append(model)
-            row_fit_models.append(models_for_row)
-        self.fit_group_of_models = row_fit_models
 
     def predict(self, X_test):
         """

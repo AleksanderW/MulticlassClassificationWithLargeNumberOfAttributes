@@ -110,10 +110,16 @@ class PomyslStackingAlgorithm:
 
         # Iterate over each list of models
         for model_list in self.models:
+            for model in model_list:
+                model_attributes = model.get_params()
+                if "random_state" in model_attributes:
+                    setattr(self, "random_state", model_attributes["random_state"])
             # Create a list of tuples containing the model name and the model object
             models_for_row = [
                 (
-                    f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}",
+                    f"{model.__class__.__name__}_{'_'.join([f'{k}={v}' for k, v in model.get_params().items()])}".replace(
+                        "__", "_"
+                    ),
                     model,
                 )
                 for model in model_list
@@ -122,7 +128,9 @@ class PomyslStackingAlgorithm:
             # Create a stacking classifier using the models and fit it to the training data
             stacking_classifier = StackingClassifier(
                 estimators=models_for_row,
-                final_estimator=LogisticRegression(n_jobs=-1, random_state=self.random_state),
+                final_estimator=LogisticRegression(
+                    n_jobs=-1, random_state=self.random_state
+                ),
                 n_jobs=-1,
             )
             stacking_classifier.fit(X_train, y_train)
@@ -202,7 +210,8 @@ class PomyslStackingAlgorithm:
         for grouped_models in self.fit_group_of_models:
             # Generate predictions for each model in the group
             row_preds = [
-                model.predict_proba(X_test) if hasattr(model, "predict_proba")
+                model.predict_proba(X_test)
+                if hasattr(model, "predict_proba")
                 else softmax(model.decision_function(X_test), axis=1)
                 for model in grouped_models.estimators_
             ]

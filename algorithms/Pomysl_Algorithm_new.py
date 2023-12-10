@@ -70,7 +70,6 @@ class PomyslAlgorithm:
                 ],
             ]
 
-
     def get_params(self):
         return {
             "aggregation_type": self.aggregation_type,
@@ -97,6 +96,9 @@ class PomyslAlgorithm:
         for model_list in self.models:
             models_for_row = []
             for model in model_list:
+                model_attributes = model.get_params()
+                if "random_state" in model_attributes:
+                    setattr(self, "random_state", model_attributes["random_state"])
                 model.fit(X_train, y_train)
                 models_for_row.append(model)
             row_fit_models.append(models_for_row)

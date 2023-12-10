@@ -30,15 +30,15 @@ from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisi
 
 class ProposedAlgorithm:
     def __init__(
-            self,
-            amount_of_subtables=2,
-            aggregation_type="A1",
-            random_state=42,
-            order="xuyager",
-            dataset="",
-            iteration="",
-            table_split=2,
-            models=None,
+        self,
+        amount_of_subtables=2,
+        aggregation_type="A1",
+        random_state=42,
+        order="xuyager",
+        dataset="",
+        iteration="",
+        table_split=2,
+        models=None,
     ):
 
         self.models = models
@@ -149,8 +149,8 @@ class ProposedAlgorithm:
 
             if len(attributes) % self.amount_of_subtables != 0:
                 remaining_attributes = attributes[
-                                       attributes_per_subtable * self.amount_of_subtables:
-                                       ]
+                    attributes_per_subtable * self.amount_of_subtables :
+                ]
                 for i, attr in enumerate(remaining_attributes):
                     col_indexes[i] += (attr,)
 
@@ -271,6 +271,10 @@ class ProposedAlgorithm:
                 model_predictions = []
 
                 for model in model_list:
+                    model_attributes = model.get_params()
+                    if "random_state" in model_attributes:
+                        setattr(self, "random_state", model_attributes["random_state"])
+
                     if hasattr(model, "predict_proba"):
                         model_predictions.append(
                             model.predict_proba(X_test_subset_split)
@@ -363,7 +367,7 @@ class ProposedAlgorithm:
 
 
 def warning_log(
-        dataset, iteration, subtables, random_state, aggregation, tuples, order
+    dataset, iteration, subtables, random_state, aggregation, tuples, order
 ):
     all_tuples = []
     for tup in tuples:
@@ -388,9 +392,9 @@ def warning_log(
     ]  # przejrzystość wyników
     if all_tuples:
         message = (
-                f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}, "
-                + "equal tuples: "
-                + f"{all_tuples}"
+            f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}, "
+            + "equal tuples: "
+            + f"{all_tuples}"
         )
         log_file_path = "log_file.txt"
         if os.path.exists(log_file_path):
@@ -408,7 +412,7 @@ def warning_log(
 
 
 def shuffle_with_return_log(
-        dataset, iteration, subtables, random_state, aggregation, order, columns
+    dataset, iteration, subtables, random_state, aggregation, order, columns
 ):
     message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} {order}: column amount{columns}"
     shuffle_path = "shuffle_log.txt"
@@ -426,9 +430,10 @@ def shuffle_with_return_log(
 
 
 def split3_features_log(
-        dataset, iteration, subtables, random_state, aggregation, less_tables
+    dataset, iteration, subtables, random_state, aggregation, less_tables
 ):
-    message = f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} : subtables amount for {subtables} subtables set to the max amount of features ({less_tables})"
+    message = (f"{dataset} {aggregation} tab{subtables} i{iteration} rs{random_state} : "
+               f"subtables amount for {subtables} subtables set to the max amount of features ({less_tables})")
     shuffle_path = "table_split3_log.txt"
     if os.path.exists(shuffle_path):
         with open(shuffle_path, "r") as f:
