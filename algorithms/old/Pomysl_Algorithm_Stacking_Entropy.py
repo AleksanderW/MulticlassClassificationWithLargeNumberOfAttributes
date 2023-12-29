@@ -156,6 +156,7 @@ class PomyslStackingEntropyAlgorithm:
 
             # Sort models based on mean loss in ascending order
             sorted_losses = sorted(model_mean_losses, key=lambda x: x[1])
+
             # Keep at least the top two models
             filtered_models = [model for model, loss in sorted_losses[:2]]
 

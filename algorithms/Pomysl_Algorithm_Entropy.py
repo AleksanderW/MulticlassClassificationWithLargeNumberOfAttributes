@@ -87,78 +87,57 @@ class PomyslEntropyAlgorithm:
         )
 
     def fit(self, X_train, y_train):
-        """
-        Fit the stacking classifiers to the training data.
-
-        Parameters:
-        - X_train: array-like, shape (n_samples, n_features)
-            The training input samples.
-        - y_train: array-like, shape (n_samples,)
-            The target values.
-        """
-
-        # Calculate unique labels in the training data
         self.y_labels = np.unique(y_train)
 
-        # Create a stratified k-fold object
         skf = StratifiedKFold(shuffle=True, random_state=self.random_state)
         chosen_models = []
 
-        # Iterate over each list of models
         for model_list in self.models:
-            # List to store mean losses for each model
             model_mean_losses = []
 
-            # Iterate over each model in the list
             for model in model_list:
-                # Get the attributes of the model
                 model_attributes = model.get_params()
 
-                # Set the random state attribute if it exists
                 if "random_state" in model_attributes:
                     setattr(self, "random_state", model_attributes["random_state"])
 
-                # List to store losses for each fold
                 fold_losses = []
 
-                # Perform k-fold cross-validation
                 for train_index, val_index in skf.split(X_train, y_train):
-                    # Split the data into training and validation sets
                     X_train_split, X_val = X_train[train_index], X_train[val_index]
                     y_train_split, y_val = y_train[train_index], y_train[val_index]
 
-                    # Fit the model to the training data
                     model.fit(X_train_split, y_train_split)
 
-                    # Predict probabilities for the validation data
                     if hasattr(model, "predict_proba"):
                         y_val_pred_proba = model.predict_proba(X_val)
                     elif hasattr(model, "decision_function"):
                         decision_values = model.decision_function(X_val)
                         y_val_pred_proba = softmax(decision_values, axis=1)
 
-                    # Calculate the loss using log loss
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
 
-                    # Append the loss to the fold_losses list
                     fold_losses.append(loss)
 
-                # Calculate the mean loss for the model
                 mean_loss = np.mean(fold_losses)
-
-                # Append the model name and mean loss to the model_mean_losses list
                 model_mean_losses.append((model, mean_loss))
 
-            # Calculate the average mean loss
             average_loss = sum(loss for _, loss in model_mean_losses) / len(model_mean_losses)
-
-            # Sort models based on mean loss in ascending order
             sorted_losses = sorted(model_mean_losses, key=lambda x: x[1])
-            # Keep at least the top two models
             filtered_models = [model for model, loss in sorted_losses[:2]]
-
-            # Include additional models whose mean loss is below or equal to the average
             filtered_models += [model for model, loss in sorted_losses[2:] if loss <= average_loss]
+
+            # Save models and mean losses to a text file
+            removed_models = [model for model, loss in sorted_losses[2:] if loss > average_loss]
+            save_file_path = "!Selected_Models_Info.txt"
+            with open(save_file_path, "a") as file:
+                for model, loss in sorted_losses:
+                    file.write(f"{model}, Mean Loss: {loss}\n")
+                for model in filtered_models:
+                    file.write(f"++++Chosen Models: {model}\n")
+                for model in removed_models:
+                    file.write(f"----REMOVED MODELS: {model}\n")
+                file.write("\n")
 
             chosen_models.append(filtered_models)
 
@@ -168,9 +147,7 @@ class PomyslEntropyAlgorithm:
             models_for_row = []
 
             for model in model_list:
-                # Fit the model to the training data
                 model.fit(X_train, y_train)
-
                 models_for_row.append(model)
 
             row_fit_models.append(models_for_row)

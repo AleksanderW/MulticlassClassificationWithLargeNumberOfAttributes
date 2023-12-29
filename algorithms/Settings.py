@@ -42,10 +42,10 @@ random_states = [
 datasets = [
     ALL_name,
     BTu_name,
-    HeC_name,
-    HFF_name,
-    SPs_name,
-    SSh_name
+    # HeC_name,
+    # HFF_name,
+    # SPs_name,
+    # SSh_name
 ]
 classifiers = [
     (KNeighborsClassifier(n_neighbors=1, n_jobs=-1, metric="manhattan"), '1NN_MUL'),
@@ -61,18 +61,18 @@ classifiers = [
     (OneVsOneClassifier(KNeighborsClassifier(n_neighbors=7, n_jobs=-1, metric="manhattan"), n_jobs=-1), '7NN_OVO'),
     (OneVsRestClassifier(KNeighborsClassifier(n_neighbors=7, n_jobs=-1, metric="manhattan"), n_jobs=-1), '7NN_OVR'),
     (SVC(), 'SVC'),
-    (ExtraTreesClassifier(n_jobs=-1), 'EXT_TRE'),
+    (MLPClassifier(max_iter=2000), 'MLP'),
     (RandomForestClassifier(n_jobs=-1), 'RND_FST'),
     (DecisionTreeClassifier(), 'DEC_TRE'),
     (BaggingClassifier(n_jobs=-1), 'BAGGNG'),
-    (StackingClassifier(
-        estimators=[('rf', RandomForestClassifier(n_jobs=-1)),
-                    ('ext', ExtraTreesClassifier(n_jobs=-1)),
-                    ('dt', DecisionTreeClassifier()),
-                    ('knn1', KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1)),
-                    ('knn3', KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1)),
-                    ('knn5', KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1))],
-        final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
+    # (StackingClassifier(
+    #     estimators=[('rf', RandomForestClassifier(n_jobs=-1)),
+    #                 ('ext', ExtraTreesClassifier(n_jobs=-1)),
+    #                 ('dt', DecisionTreeClassifier()),
+    #                 ('knn1', KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1)),
+    #                 ('knn3', KNeighborsClassifier(n_neighbors=3, metric="manhattan", n_jobs=-1)),
+    #                 ('knn5', KNeighborsClassifier(n_neighbors=5, metric="manhattan", n_jobs=-1))],
+    #     final_estimator=LogisticRegression(n_jobs=-1), n_jobs=-1), 'STACKING')
 ]
 
 # Parametry poniżej dotyczą Proponowanego Algorytmu
@@ -127,8 +127,8 @@ ALG_split_variant = [
 ALG_models = [
     [
         RandomForestClassifier(n_jobs=-1),
-        ExtraTreesClassifier(n_jobs=-1),
-        DecisionTreeClassifier(),
+        MLPClassifier(max_iter=2000),
+        SVC(),
     ],
     [
         KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),

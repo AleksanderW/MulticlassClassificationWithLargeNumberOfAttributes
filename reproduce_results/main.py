@@ -13,26 +13,20 @@ from algorithms.Constants import (
 )
 from algorithms.Evaluation import evaluate_classifiers
 from algorithms.Pomysl_Algorithm_Entropy import PomyslEntropyAlgorithm
-from algorithms.Pomysl_Algorithm_Stacking import PomyslStackingAlgorithm
-from algorithms.Pomysl_Algorithm_Stacking_Entropy import PomyslStackingEntropyAlgorithm
 from algorithms.Pomysl_Algorithm_new import PomyslAlgorithm
-from algorithms.Stacking_Entropy import StackingEntropy
-from algorithms.Proposed_Algorithm_new import ProposedAlgorithm
 from algorithms.Settings import (
     datasets,
     steps,
-    ALG_amount_of_subtables,
     ALG_aggregations,
     ALG_models,
     n_splits,
     random_states,
     classifiers,
     ALG_orders,
-    ALG_kNN_neighbours,
     parallel_evaluation,
-    ALG_split_variant,
     feature_selectors,
 )
+from algorithms.Stacking_Entropy import StackingEntropy
 
 path = op.join("..", "results")
 if not os.path.exists(path):
