@@ -1,11 +1,12 @@
-from scipy.special import softmax
 import numpy as np
+from scipy.special import softmax
 from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, log_loss
-from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
 
 from algorithms.Aggregations import (
     A1_aggr,
@@ -56,9 +57,19 @@ class PomyslEntropyAlgorithm:
         if models is None:
             self.models = [
                 [
-                    RandomForestClassifier(n_jobs=-1, random_state=self.random_state),
-                    ExtraTreesClassifier(n_jobs=-1, random_state=self.random_state),
-                    DecisionTreeClassifier(random_state=self.random_state),
+                    RandomForestClassifier(n_estimators=10, random_state=42, n_jobs=-1),
+                    RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1),
+                    RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1),
+                ],
+                [
+                    MLPClassifier(hidden_layer_sizes=(100,), max_iter=2000, random_state=42),
+                    MLPClassifier(hidden_layer_sizes=(50, 50), max_iter=2000, random_state=42),
+                    MLPClassifier(hidden_layer_sizes=(100, 50, 25), max_iter=2000, random_state=42),
+                ],
+                [
+                    SVC(kernel='linear', C=1, random_state=42),
+                    SVC(kernel='rbf', C=1, random_state=42),
+                    SVC(kernel='poly', C=1, random_state=42),
                 ],
                 [
                     KNeighborsClassifier(n_neighbors=1, metric="manhattan", n_jobs=-1),
@@ -89,7 +100,7 @@ class PomyslEntropyAlgorithm:
     def fit(self, X_train, y_train):
         self.y_labels = np.unique(y_train)
 
-        skf = StratifiedKFold(shuffle=True, random_state=self.random_state)
+        skf = RepeatedStratifiedKFold(n_splits=2, random_state=self.random_state)
         chosen_models = []
 
         for model_list in self.models:

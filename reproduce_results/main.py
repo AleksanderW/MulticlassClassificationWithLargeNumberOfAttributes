@@ -12,8 +12,6 @@ from algorithms.Constants import (
     empty_logs,
 )
 from algorithms.Evaluation import evaluate_classifiers
-from algorithms.Pomysl_Algorithm_Entropy import PomyslEntropyAlgorithm
-from algorithms.Pomysl_Algorithm_new import PomyslAlgorithm
 from algorithms.Settings import (
     datasets,
     steps,
@@ -25,8 +23,14 @@ from algorithms.Settings import (
     ALG_orders,
     parallel_evaluation,
     feature_selectors,
+    ALG_amount_of_subtables,
+    ALG_split_variant,
 )
-from algorithms.Stacking_Entropy import StackingEntropy
+from algorithms.classifiers.Pomysl_Algorithm import PomyslAlgorithm
+from algorithms.classifiers.Pomysl_Algorithm_Entropy import PomyslEntropyAlgorithm
+from algorithms.classifiers.Pomysl_Algorithm_Entropy_Groups import PomyslEntropyGroupsAlgorithm
+from algorithms.classifiers.Proposed_Algorithm import ProposedAlgorithm
+from algorithms.classifiers.Stacking_Entropy import StackingEntropy
 
 path = op.join("..", "results")
 if not os.path.exists(path):
@@ -86,7 +90,18 @@ for selector in feature_selectors:
             )
             for agg, order in product(ALG_aggregations, ALG_orders)
         ]
-
+        clfs_loop += [
+            (
+                PomyslEntropyGroupsAlgorithm(
+                    aggregation_type=agg,
+                    order=order,
+                    random_state=random_state,
+                    models=ALG_models,
+                ),
+                f"POM_enGROUPS_{agg}_{order}",
+            )
+            for agg, order in product(ALG_aggregations, ALG_orders)
+        ]
         # clfs_loop += [
         #     (
         #         PomyslStackingAlgorithm(
@@ -125,15 +140,15 @@ for selector in feature_selectors:
         #     )
         #     for agg, order in product(ALG_aggregations, ALG_orders)
         # ]
-        clfs_loop += [
-            (
-                StackingEntropy(
-                    random_state=random_state,
-                    models=ALG_models,
-                ),
-                f"STACKING_Entropy",
-            )
-        ]
+        # clfs_loop += [
+        #     (
+        #         StackingEntropy(
+        #             random_state=random_state,
+        #             models=ALG_models,
+        #         ),
+        #         f"STACKING_Entropy",
+        #     )
+        # ]
         clfs_loop = set_params(clfs_loop, random_state)
 
         for dataset in datasets:
