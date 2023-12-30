@@ -48,7 +48,6 @@ def evaluate_classifiers(
             dict: Dictionary of evaluation metrics.
         """
         # Preprocess the data
-
         scaler = MinMaxScaler()
         label_encoder = LabelEncoder()
         X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
@@ -75,6 +74,8 @@ def evaluate_classifiers(
             clf.iteration = iteration
         if "random_state" in clf.get_params():
             clf.random_state = random_state
+        if "step" in clf.get_params():
+            clf.step = step
         # Train the classifier
         clf.fit(X_train, y_train)
         # Preprocess the test data

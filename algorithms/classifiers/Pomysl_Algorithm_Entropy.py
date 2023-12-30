@@ -138,18 +138,6 @@ class PomyslEntropyAlgorithm:
             filtered_models = [model for model, loss in sorted_losses[:2]]
             filtered_models += [model for model, loss in sorted_losses[2:] if loss <= average_loss]
 
-            # Save models and mean losses to a text file
-            removed_models = [model for model, loss in sorted_losses[2:] if loss > average_loss]
-            save_file_path = "!Selected_Models_Info.txt"
-            with open(save_file_path, "a") as file:
-                for model, loss in sorted_losses:
-                    file.write(f"{model}, Mean Loss: {loss}\n")
-                for model in filtered_models:
-                    file.write(f"++++Chosen Models: {model}\n")
-                for model in removed_models:
-                    file.write(f"----REMOVED MODELS: {model}\n")
-                file.write("\n")
-
             chosen_models.append(filtered_models)
 
         row_fit_models = []

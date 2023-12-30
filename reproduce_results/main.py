@@ -47,7 +47,8 @@ selector_file_paths = {
 for selector in feature_selectors:
     create_logs(selector)
     for step, n_split, random_state in product(steps, n_splits, random_states):
-        clfs_loop = classifiers.copy()
+        clfs_loop = []
+        # clfs_loop = classifiers.copy()
         # clfs_loop += [
         #     (
         #         ProposedAlgorithm(
@@ -65,31 +66,31 @@ for selector in feature_selectors:
         #     )
         # ]
 
-        clfs_loop += [
-            (
-                PomyslAlgorithm(
-                    aggregation_type=agg,
-                    order=order,
-                    random_state=random_state,
-                    models=ALG_models,
-                ),
-                f"POM_ALG_{agg}_{order}",
-            )
-            for agg, order in product(ALG_aggregations, ALG_orders)
-        ]
-
-        clfs_loop += [
-            (
-                PomyslEntropyAlgorithm(
-                    aggregation_type=agg,
-                    order=order,
-                    random_state=random_state,
-                    models=ALG_models,
-                ),
-                f"POM_ENTROPY_{agg}_{order}",
-            )
-            for agg, order in product(ALG_aggregations, ALG_orders)
-        ]
+        # clfs_loop += [
+        #     (
+        #         PomyslAlgorithm(
+        #             aggregation_type=agg,
+        #             order=order,
+        #             random_state=random_state,
+        #             models=ALG_models,
+        #         ),
+        #         f"POM_ALG_{agg}_{order}",
+        #     )
+        #     for agg, order in product(ALG_aggregations, ALG_orders)
+        # ]
+        #
+        # clfs_loop += [
+        #     (
+        #         PomyslEntropyAlgorithm(
+        #             aggregation_type=agg,
+        #             order=order,
+        #             random_state=random_state,
+        #             models=ALG_models,
+        #         ),
+        #         f"POM_ENTROPY_{agg}_{order}",
+        #     )
+        #     for agg, order in product(ALG_aggregations, ALG_orders)
+        # ]
         clfs_loop += [
             (
                 PomyslEntropyGroupsAlgorithm(

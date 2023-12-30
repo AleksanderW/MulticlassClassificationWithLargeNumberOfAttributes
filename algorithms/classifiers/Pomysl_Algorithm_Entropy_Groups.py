@@ -138,6 +138,22 @@ class PomyslEntropyGroupsAlgorithm:
             filtered_models = [(model, loss) for model, loss in sorted_losses[:2]]
             filtered_models += [(model, loss) for model, loss in sorted_losses[2:] if loss <= average_loss]
 
+            # SAVE TO TXT
+            # SAVE TO TXT
+            removed_models = [model for model, loss in sorted_losses[2:] if loss > average_loss]
+
+            save_file_path = f"!{self.dataset}_Groups_fold_{self.iteration}.txt"
+            with open(save_file_path, "a") as file:
+                for model, loss in sorted_losses:
+                    file.write(f"{model}, Mean Loss: {loss}\n")
+                for model in filtered_models:
+                    file.write(f"++++Chosen Models: {model}\n")
+                for model in removed_models:
+                    file.write(f"----Removed Models: {model}\n")
+                file.write("\n")
+            # SAVE TO TXT
+            # SAVE TO TXT
+
             chosen_models.append(filtered_models)
 
         # Calculate the mean loss for each group of models within chosen_models
@@ -153,6 +169,28 @@ class PomyslEntropyGroupsAlgorithm:
             # Keep the two groups with the lowest mean losses
             sorted_chosen_models = sorted(chosen_models, key=lambda group: np.mean([loss for _, loss in group]))
             filtered_chosen_models = sorted_chosen_models[:2]
+
+        # SAVE TO TXT
+        # SAVE TO TXT
+        with open(save_file_path, "a") as file:
+            for models in filtered_chosen_models:
+                grouped_models = []
+                grouped_loss = []
+                for model, loss in models:
+                    grouped_models.append(model)
+                    grouped_loss.append(loss)
+                file.write(f"====Chosen Model Groups: {grouped_models}, Mean Loss {np.mean(grouped_loss)}\n")
+            for models in [group for group, mean_loss in zip(chosen_models, group_mean_losses) if
+                          mean_loss > average_group_mean_loss]:
+                grouped_models = []
+                grouped_loss = []
+                for model, loss in models:
+                    grouped_models.append(model)
+                    grouped_loss.append(loss)
+                file.write(f"[[[[Removed Model Groups: {grouped_models}, Mean Loss {np.mean(grouped_loss)}\n")
+            file.write("\n")
+        # SAVE TO TXT
+        # SAVE TO TXT
 
         row_fit_models = []
 
