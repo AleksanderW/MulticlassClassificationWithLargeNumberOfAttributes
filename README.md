@@ -113,3 +113,4 @@ require git-lfs https://sabicalija.github.io/git-lfs-intro/
         \sqrt{\frac{\overline{x}_1^2+...+\overline{x}_n^2}{n}}\right].
 \end{equation}
 ``` 
+ 
