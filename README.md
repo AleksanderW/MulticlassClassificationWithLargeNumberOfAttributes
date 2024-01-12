@@ -112,4 +112,4 @@ require git-lfs https://sabicalija.github.io/git-lfs-intro/
     \mathcal{A}_{10}(\textbf{$x$}_1,...,\textbf{$x$}_n)=\left[\sqrt{\frac{\underline{x}_1^2+...+\underline{x}_n^2}{n}},
         \sqrt{\frac{\overline{x}_1^2+...+\overline{x}_n^2}{n}}\right].
 \end{equation}
-```
+``` 
