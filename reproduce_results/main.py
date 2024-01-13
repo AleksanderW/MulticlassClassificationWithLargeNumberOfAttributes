@@ -48,6 +48,7 @@ for selector in feature_selectors:
     create_logs(selector)
     for step, n_split, random_state in product(steps, n_splits, random_states):
         # clfs_loop = []
+        #
         clfs_loop = classifiers.copy()
         # clfs_loop += [
         #     (
