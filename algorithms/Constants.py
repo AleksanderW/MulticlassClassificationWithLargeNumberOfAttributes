@@ -1,13 +1,16 @@
 import os
 import re
 
-ALL_name = 'ALL_GSE13425'
-BTu_name = 'BTu_GSE4290'
-HeC_name = 'HeC_GSE14323'
-HFF_name = 'HFF_GSE5406'
-SPs_name = 'SPs_GSE13355'
-SSh_name = 'SSh_GSE13904'
-
+ALL_name = 'ALL_GSE13425_FINAL'
+BTu_name = 'BTu_GSE4290_FINAL'
+HeC_name = 'HeC_GSE14323_FINAL'
+HFF_name = 'HFF_GSE5406_FINAL'
+SPs_name = 'SPs_GSE13355_FINAL'
+SSh_name = 'SSh_GSE13904_FINAL'
+BreastTissue = 'BreastTissue'
+Vertebral = 'Vertebral_3C'
+StudentDropOut = "StudentDropOutAcademicSuccess"
+Cmc = "cmc"
 
 def extract_variables(text):
     """

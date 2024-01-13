@@ -85,7 +85,7 @@ for selector in feature_selectors:
     ):
         skf = StratifiedKFold(n_splits=n_split, random_state=random_state, shuffle=True)
         data = pd.read_csv(
-            os.path.join("..", "dataset", "csv", dataset + "_FINAL.csv"), delimiter=";"
+            os.path.join("..", "dataset", "csv", dataset), delimiter=";"
         )
         X = data.iloc[:, :-1].set_index("sample_id")
         y = data.iloc[:, -1].values

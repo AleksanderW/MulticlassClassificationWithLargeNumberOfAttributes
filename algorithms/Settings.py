@@ -8,7 +8,8 @@ from sklearn.tree import DecisionTreeClassifier
 from stability_selection.stability_selection import StabilitySelection
 from sklearn.feature_selection import RFECV
 from sklearn.svm import SVC
-from algorithms.Constants import ALL_name, BTu_name, HeC_name, HFF_name, SPs_name, SSh_name
+from algorithms.Constants import ALL_name, BTu_name, HeC_name, HFF_name, SPs_name, SSh_name, BreastTissue, \
+    Vertebral, StudentDropOut, Cmc
 
 feature_selectors = [
     "RFE",
@@ -40,12 +41,16 @@ random_states = [
 ]
 
 datasets = [
-    ALL_name,
-    BTu_name,
-    HeC_name,
+    # ALL_name,
+    # BTu_name,
+    # HeC_name,
     HFF_name,
-    SPs_name,
-    SSh_name
+    # SPs_name,
+    # SSh_name,
+    # BreastTissue,
+    # Vertebral,
+    # StudentDropOut,
+    # Abalone
 ]
 classifiers = [
     (KNeighborsClassifier(n_neighbors=1, n_jobs=-1, metric="manhattan"), '1NN_MUL'),

@@ -52,21 +52,22 @@ def evaluate_classifiers(
         label_encoder = LabelEncoder()
         X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
         y_train, y_test = y[train_index], y[test_index]
-        y_train = label_encoder.fit_transform(y_train)
+        label_encoder.fit(y)
+        y_train = label_encoder.transform(y_train)
         y_test = label_encoder.transform(y_test)
         y_encoded = label_encoder.transform(y)
         scaler.fit(X_train, y_train)
         X_train = scaler.transform(X_train)
 
-        # Perform feature selection
-        if selector == "RFECV" or selector == "RFE":
-            feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-                                                         f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
-        elif selector == "StabilitySelection":
-            feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-                                                         f"{dataset}_{random_state}_{iteration}.sav")).get_support(
-                indices=False)
-        X_train = X_train[:, feature_selection]
+        # # Perform feature selection
+        # if selector == "RFECV" or selector == "RFE":
+        #     feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
+        #                                                  f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
+        # elif selector == "StabilitySelection":
+        #     feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
+        #                                                  f"{dataset}_{random_state}_{iteration}.sav")).get_support(
+        #         indices=False)
+        # X_train = X_train[:, feature_selection]
         # Set classifier parameters
         if "dataset" in clf.get_params():
             clf.dataset = dataset
@@ -79,8 +80,8 @@ def evaluate_classifiers(
         # Train the classifier
         clf.fit(X_train, y_train)
         # Preprocess the test data
-        X_test_scaled = scaler.fit_transform(X_test, y_test)
-        X_test = X_test_scaled[:, feature_selection]
+        X_test = scaler.fit_transform(X_test, y_test)
+        # X_test = X_test[:, feature_selection]
         # Make predictions
         y_pred = clf.predict(X_test)
 

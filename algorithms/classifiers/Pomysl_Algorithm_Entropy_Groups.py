@@ -105,7 +105,7 @@ class PomyslEntropyGroupsAlgorithm:
 
         for model_list in self.models:
             model_mean_losses = []
-
+            model_list_log = []
             for model in model_list:
                 model_attributes = model.get_params()
 
@@ -132,6 +132,7 @@ class PomyslEntropyGroupsAlgorithm:
 
                 mean_loss = np.mean(fold_losses)
                 model_mean_losses.append((model, mean_loss))
+                model_list_log.append((model, fold_losses))
 
             average_loss = sum(loss for _, loss in model_mean_losses) / len(model_mean_losses)
             sorted_losses = sorted(model_mean_losses, key=lambda x: x[1])
@@ -140,12 +141,12 @@ class PomyslEntropyGroupsAlgorithm:
 
             # SAVE TO TXT
             # SAVE TO TXT
-            removed_models = [model for model, loss in sorted_losses[2:] if loss > average_loss]
+            removed_models = [(model, loss) for model, loss in sorted_losses[2:] if loss > average_loss]
 
             save_file_path = f"!{self.dataset}_Groups_fold_{self.iteration}.txt"
             with open(save_file_path, "a") as file:
-                for model, loss in sorted_losses:
-                    file.write(f"{model}, Mean Loss: {loss}\n")
+                for model, loss in model_list_log:
+                    file.write(f"{model}, Losses: {loss}\n")
                 for model in filtered_models:
                     file.write(f"++++Chosen Models: {model}\n")
                 for model in removed_models:
@@ -181,7 +182,7 @@ class PomyslEntropyGroupsAlgorithm:
                     grouped_loss.append(loss)
                 file.write(f"====Chosen Model Groups: {grouped_models}, Mean Loss {np.mean(grouped_loss)}\n")
             for models in [group for group, mean_loss in zip(chosen_models, group_mean_losses) if
-                          mean_loss > average_group_mean_loss]:
+                           mean_loss > average_group_mean_loss]:
                 grouped_models = []
                 grouped_loss = []
                 for model, loss in models:
