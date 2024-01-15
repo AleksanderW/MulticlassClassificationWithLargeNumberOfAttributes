@@ -14,7 +14,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
-
+# TODO ADD graphs showing log_loss in crossvalidation (SSH DATASET)
 def evaluate_classifiers(
     clf, name, dataset, n_splits, step, random_state, selector, parallel=True, feature_selection = False
 ):
