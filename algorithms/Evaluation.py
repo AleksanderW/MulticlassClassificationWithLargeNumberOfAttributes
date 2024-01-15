@@ -16,7 +16,9 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 # TODO ADD graphs showing log_loss in crossvalidation (SSH DATASET)
 def evaluate_classifiers(
-    clf, name, dataset, n_splits, step, random_state, selector, parallel=True, feature_selection = False
+    clf, name, dataset, n_splits, step, random_state,
+        # selector,
+        parallel=True, feature_selection = False
 ):
     """Evaluate classifiers using k-fold cross-validation.
      Args:
@@ -59,19 +61,19 @@ def evaluate_classifiers(
         scaler.fit(X_train, y_train)
         X_train = scaler.transform(X_train)
 
-        if feature_selection:
-            # Perform feature selection
-            if selector == "RFECV" or selector == "RFE":
-                feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-                                                             f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
-            elif selector == "StabilitySelection":
-                feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-                                                             f"{dataset}_{random_state}_{iteration}.sav")).get_support(
-                    indices=False)
-            # Preprocess the test data
-            X_train = X_train[:, feature_selection]
-            X_test_scaled = scaler.fit_transform(X_test, y_test)
-            X_test = X_test_scaled[:, feature_selection]
+        # if feature_selection:
+        #     # Perform feature selection
+        #     if selector == "RFECV" or selector == "RFE":
+        #         feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
+        #                                                      f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
+        #     elif selector == "StabilitySelection":
+        #         feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
+        #                                                      f"{dataset}_{random_state}_{iteration}.sav")).get_support(
+        #             indices=False)
+        #     # Preprocess the test data
+        #     X_train = X_train[:, feature_selection]
+        X_test = scaler.transform(X_test, y_test)
+        #     X_test = X_test_scaled[:, feature_selection]
         # Set classifier parameters
         if "dataset" in clf.get_params():
             clf.dataset = dataset
