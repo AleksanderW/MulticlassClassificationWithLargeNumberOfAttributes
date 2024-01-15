@@ -8,7 +8,7 @@ from sklearn.feature_selection import RFECV, RFE
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVC
-from stability_selection.stability_selection import StabilitySelection
+# from stability_selection.stability_selection import StabilitySelection
 from Settings import datasets, steps, n_splits, random_states, feature_selectors
 
 
@@ -40,11 +40,11 @@ def process_iteration(
             scoring="accuracy",
             n_jobs=-1,
         )
-    elif selector == "StabilitySelection":
-        # Stability Selection
-        feature_selection = StabilitySelection(
-            base_estimator=SVC(kernel="linear", random_state=random_state), n_jobs=-1
-        )
+    # elif selector == "StabilitySelection":
+    #     # Stability Selection
+    #     feature_selection = StabilitySelection(
+    #         base_estimator=SVC(kernel="linear", random_state=random_state), n_jobs=-1
+    #     )
     elif selector == "RFE":
         # Recursive Feature Elimination
         feature_selection = RFE(
