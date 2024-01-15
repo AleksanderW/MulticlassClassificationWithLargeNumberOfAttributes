@@ -16,7 +16,7 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 
 def evaluate_classifiers(
-    clf, name, dataset, n_splits, step, random_state, selector, parallel=True
+    clf, name, dataset, n_splits, step, random_state, selector, parallel=True, feature_selection = False
 ):
     """Evaluate classifiers using k-fold cross-validation.
      Args:
@@ -38,7 +38,7 @@ def evaluate_classifiers(
     X = data.iloc[:, :-1].set_index("sample_id")
     y = data.iloc[:, -1].values
 
-    def evaluate_fold(iteration, train_index, test_index):
+    def evaluate_fold(iteration, train_index, test_index, feature_selection):
         """Evaluate a single fold of cross-validation.
         Args:
             iteration (int): Iteration number.
@@ -59,15 +59,19 @@ def evaluate_classifiers(
         scaler.fit(X_train, y_train)
         X_train = scaler.transform(X_train)
 
-        # Perform feature selection
-        if selector == "RFECV" or selector == "RFE":
-            feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-                                                         f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
-        elif selector == "StabilitySelection":
-            feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-                                                         f"{dataset}_{random_state}_{iteration}.sav")).get_support(
-                indices=False)
-        X_train = X_train[:, feature_selection]
+        if feature_selection:
+            # Perform feature selection
+            if selector == "RFECV" or selector == "RFE":
+                feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
+                                                             f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
+            elif selector == "StabilitySelection":
+                feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
+                                                             f"{dataset}_{random_state}_{iteration}.sav")).get_support(
+                    indices=False)
+            # Preprocess the test data
+            X_train = X_train[:, feature_selection]
+            X_test_scaled = scaler.fit_transform(X_test, y_test)
+            X_test = X_test_scaled[:, feature_selection]
         # Set classifier parameters
         if "dataset" in clf.get_params():
             clf.dataset = dataset
@@ -77,9 +81,6 @@ def evaluate_classifiers(
             clf.random_state = random_state
         # Train the classifier
         clf.fit(X_train, y_train)
-        # Preprocess the test data
-        X_test_scaled = scaler.fit_transform(X_test, y_test)
-        X_test = X_test_scaled[:, feature_selection]
         # Make predictions
         y_pred = clf.predict(X_test)
 
@@ -116,7 +117,7 @@ def evaluate_classifiers(
 
     if parallel:
         results = Parallel(n_jobs=-1)(
-            delayed(evaluate_fold)(iteration, train_index, test_index)
+            delayed(evaluate_fold)(iteration, train_index, test_index, feature_selection)
             for iteration, (train_index, test_index) in enumerate(
                 StratifiedKFold(
                     n_splits=n_splits, random_state=random_state, shuffle=True
@@ -125,7 +126,7 @@ def evaluate_classifiers(
         )
     else:
         results = [
-            evaluate_fold(iteration, train_index, test_index)
+            evaluate_fold(iteration, train_index, test_index, feature_selection)
             for iteration, (train_index, test_index) in enumerate(
                 StratifiedKFold(
                     n_splits=n_splits, random_state=random_state, shuffle=True

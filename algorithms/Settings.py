@@ -5,7 +5,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from stability_selection.stability_selection import StabilitySelection
+# from stability_selection.stability_selection import StabilitySelection
 from sklearn.feature_selection import RFECV
 from sklearn.svm import SVC
 from algorithms.Constants import ALL_name, BTu_name, HeC_name, HFF_name, SPs_name, SSh_name
