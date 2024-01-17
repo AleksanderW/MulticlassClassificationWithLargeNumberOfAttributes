@@ -72,7 +72,7 @@ def evaluate_classifiers(
         #             indices=False)
         #     # Preprocess the test data
         #     X_train = X_train[:, feature_selection]
-        X_test = scaler.transform(X_test, y_test)
+        X_test = scaler.transform(X_test)
         #     X_test = X_test_scaled[:, feature_selection]
         # Set classifier parameters
         if "dataset" in clf.get_params():

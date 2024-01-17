@@ -41,11 +41,11 @@ random_states = [
 
 datasets = [
     ALL_name,
-    # BTu_name,
-    # HeC_name,
-    # HFF_name,
-    # SPs_name,
-    # SSh_name
+    BTu_name,
+    HeC_name,
+    HFF_name,
+    SPs_name,
+    SSh_name
 ]
 classifiers = [
     (KNeighborsClassifier(n_neighbors=1, n_jobs=-1, metric="manhattan"), '1NN_MUL'),
