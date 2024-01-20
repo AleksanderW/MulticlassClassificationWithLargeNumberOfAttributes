@@ -1,5 +1,8 @@
+import copy
+
 import numpy as np
 from scipy.special import softmax
+from sklearn.base import ClassifierMixin, BaseEstimator
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, roc_auc_score, log_loss
@@ -24,7 +27,7 @@ from algorithms.MinMaxArrays import find_min_max_pairs
 from algorithms.Orders import xu_yager_order, lex1_order, lex2_order, get_decisions
 
 
-class PomyslEntropyAlgorithm:
+class PomyslEntropyAlgorithm(BaseEstimator, ClassifierMixin):
     """
     Parameters:
         aggregation_type (str): The type of aggregation to use. Defaults to "A1".
@@ -98,7 +101,10 @@ class PomyslEntropyAlgorithm:
         )
 
     def fit(self, X_train, y_train):
+
         self.y_labels = np.unique(y_train)
+
+        self.log_losses = {}
 
         skf = RepeatedStratifiedKFold(n_splits=2, random_state=self.random_state)
         chosen_models = []
@@ -129,7 +135,7 @@ class PomyslEntropyAlgorithm:
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
 
                     fold_losses.append(loss)
-
+                self.log_losses[model.__str__] = copy.copy(fold_losses)
                 mean_loss = np.mean(fold_losses)
                 model_mean_losses.append((model, mean_loss))
 
@@ -149,11 +155,11 @@ class PomyslEntropyAlgorithm:
                 for model in removed_models:
                     file.write(f"----REMOVED MODELS: {model}\n")
                 file.write("\n")
-
+            self.log_losses["removed_models"] = removed_models.__str__()
             chosen_models.append(filtered_models)
 
         row_fit_models = []
-
+        # TODO save log loss for train data
         for model_list in chosen_models:
             models_for_row = []
 

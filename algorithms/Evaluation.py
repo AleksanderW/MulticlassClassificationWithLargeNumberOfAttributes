@@ -1,3 +1,4 @@
+import copy
 import os
 
 import joblib
@@ -5,6 +6,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from scipy.special import softmax
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.metrics import (
     balanced_accuracy_score,
     accuracy_score,
@@ -15,8 +17,9 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 # TODO ADD graphs showing log_loss in crossvalidation (SSH DATASET)
+# W wersji sklearn 1.4.0 ClassifierMixin wymusza posiadanie metody fit? https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn-base-classifiermixin
 def evaluate_classifiers(
-    clf, name, dataset, n_splits, step, random_state,
+    clf:ClassifierMixin, name, dataset, n_splits, step, random_state,
         # selector,
         parallel=True, feature_selection = False
 ):
@@ -82,15 +85,17 @@ def evaluate_classifiers(
         if "random_state" in clf.get_params():
             clf.random_state = random_state
         # Train the classifier
-        clf.fit(X_train, y_train)
+        # make local copy of clf (tak dla pewności że nie nadpisuje obiektu)
+        clf_ = copy.deepcopy(clf)
+        clf_.fit(X_train, y_train)
         # Make predictions
-        y_pred = clf.predict(X_test)
+        y_pred = clf_.predict(X_test)
 
 
         try:
-            y_pred_proba = clf.predict_proba(X_test)
+            y_pred_proba = clf_.predict_proba(X_test)
         except AttributeError:
-            y_pred_scores = clf.decision_function(X_test)
+            y_pred_scores = clf_.decision_function(X_test)
             y_pred_proba = softmax(y_pred_scores, axis=1)
 
         # Calculate evaluation metrics
@@ -101,7 +106,10 @@ def evaluate_classifiers(
                 y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y_encoded)
             ),
         }
-
+        try:
+            metrics["losses"] = clf_.log_losses.__str__()
+        except AttributeError:
+            metrics["losses"] = clf_.__str__() + "WITHOUT log_loss_field"
         averages = [
             # 'micro',
             "macro",
@@ -148,6 +156,7 @@ def evaluate_classifiers(
     f1_score_mac = [result["f1_score_macro"] for result in results]
     # f1_score_wgt = [result['f1_score_weighted'] for result in results]
     auc = [result["auc"] for result in results]
+    log_loss = {index:result for index, result in enumerate(results)}
 
     return {
         "name": name,
@@ -164,4 +173,5 @@ def evaluate_classifiers(
         "f1_score_mac": (np.mean(f1_score_mac), np.std(f1_score_mac)),
         # 'f1_score_wgt': (np.mean(f1_score_wgt), np.std(f1_score_wgt)),
         "auc": (np.mean(auc), np.std(auc)),
+        "log_loss": log_loss
     }

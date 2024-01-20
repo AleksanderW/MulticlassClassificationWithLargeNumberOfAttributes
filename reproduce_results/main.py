@@ -209,6 +209,7 @@ for step, n_split, random_state in product(steps, n_splits, random_states):
                     "mac_f1_std": result["f1_score_mac"][1],
                     # 'wgt_f1': result['f1_score_wgt'][0],
                     # 'wgt_f1_std': result['f1_score_wgt'][1]
+                    "log_loss": result["log_loss"]
                 }
             )
 
