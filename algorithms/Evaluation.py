@@ -156,7 +156,7 @@ def evaluate_classifiers(
     f1_score_mac = [result["f1_score_macro"] for result in results]
     # f1_score_wgt = [result['f1_score_weighted'] for result in results]
     auc = [result["auc"] for result in results]
-    log_loss = {index:result for index, result in enumerate(results)}
+    log_loss = {index:result["losses"] for index, result in enumerate(results)}
 
     return {
         "name": name,
