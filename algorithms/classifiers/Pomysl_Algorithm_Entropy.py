@@ -135,7 +135,7 @@ class PomyslEntropyAlgorithm(BaseEstimator, ClassifierMixin):
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
 
                     fold_losses.append(loss)
-                self.log_losses[model.__str__] = copy.copy(fold_losses)
+                self.log_losses[model.__str__()] = copy.copy(fold_losses)
                 mean_loss = np.mean(fold_losses)
                 model_mean_losses.append((model, mean_loss))
 
