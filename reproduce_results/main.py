@@ -217,6 +217,6 @@ for step, n_split, random_state in product(steps, n_splits, random_states):
         results_df = results_df.sort_values(
             by=["auc", "acc", "bal_acc"], ascending=False
         )
-        writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
+        writer = pd.ExcelWriter(file_path+".xlsx", engine="xlsxwriter")
         results_df.to_excel(writer, sheet_name="Results", index=False)
         writer.close()

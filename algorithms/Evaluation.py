@@ -53,16 +53,21 @@ def evaluate_classifiers(
             dict: Dictionary of evaluation metrics.
         """
         # Preprocess the data
-
-        scaler = MinMaxScaler()
-        label_encoder = LabelEncoder()
         X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
         y_train, y_test = y[train_index], y[test_index]
-        y_train = label_encoder.fit_transform(y_train)
-        y_test = label_encoder.transform(y_test)
-        y_encoded = label_encoder.transform(y)
+
+        scaler = MinMaxScaler()
         scaler.fit(X_train, y_train)
         X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+
+        label_encoder = LabelEncoder()
+        label_encoder.fit(y_train)
+        y_train = label_encoder.transform(y_train)
+        y_test = label_encoder.transform(y_test)
+        y_encoded = label_encoder.transform(y)
+
+
 
         # if feature_selection:
         #     # Perform feature selection
@@ -75,7 +80,7 @@ def evaluate_classifiers(
         #             indices=False)
         #     # Preprocess the test data
         #     X_train = X_train[:, feature_selection]
-        X_test = scaler.transform(X_test)
+
         #     X_test = X_test_scaled[:, feature_selection]
         # Set classifier parameters
         if "dataset" in clf.get_params():

@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from scipy.special import softmax
 from sklearn.datasets import load_iris
@@ -99,7 +101,7 @@ class PomyslEntropyGroupsAlgorithm:
 
     def fit(self, X_train, y_train):
         self.y_labels = np.unique(y_train)
-
+        self.log_losses = {}
         skf = RepeatedStratifiedKFold(n_splits=2, random_state=self.random_state)
         chosen_models = []
 
@@ -129,7 +131,7 @@ class PomyslEntropyGroupsAlgorithm:
                     loss = log_loss(y_val, y_val_pred_proba, labels=self.y_labels)
 
                     fold_losses.append(loss)
-
+                self.log_losses[model.__str__] = copy.copy(fold_losses)
                 mean_loss = np.mean(fold_losses)
                 model_mean_losses.append((model, mean_loss))
 
@@ -164,7 +166,7 @@ class PomyslEntropyGroupsAlgorithm:
                 models_for_row.append(model)
 
             row_fit_models.append(models_for_row)
-
+        self.log_losses["removed_models"] = row_fit_models.__str__()
         self.fit_group_of_models = row_fit_models
 
         # for i, model_list in enumerate(self.models):
