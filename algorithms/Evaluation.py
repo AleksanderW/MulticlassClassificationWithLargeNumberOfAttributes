@@ -1,7 +1,7 @@
 import copy
 import os
+import random
 import warnings
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -116,7 +116,9 @@ def evaluate_classifiers(
 
     ###################
     np.random.seed(random_state)
-    random_seeds = np.random.randint(0, 2**31, external_shuffles)
+    random.seed(random_state)
+    random_seeds = [random.randint(0, 2 ** 32 - 1) for _ in range(5)]
+
     if parallel:
         results = joblib.Parallel(n_jobs=-1)(
             joblib.delayed(lambda seed: evaluate_fold(seed, *train_test_split(X, y, train_size=train_size, shuffle=True,
