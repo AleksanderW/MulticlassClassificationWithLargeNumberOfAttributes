@@ -1,5 +1,6 @@
 import copy
 import os
+import warnings
 
 import joblib
 import numpy as np
@@ -16,12 +17,17 @@ from sklearn.metrics import (
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
+warnings.filterwarnings("ignore",
+                        message="The least populated class in y has only 4 members, which is less than n_splits=5.",
+                        append=True)
+
+
 # TODO ADD graphs showing log_loss in crossvalidation (SSH DATASET)
 # W wersji sklearn 1.4.0 ClassifierMixin wymusza posiadanie metody fit? https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn-base-classifiermixin
 def evaluate_classifiers(
-    clf:ClassifierMixin, name, dataset, n_splits, step, random_state,
+        clf: ClassifierMixin, name, dataset, n_splits, step, random_state,
         # selector,
-        parallel=True, feature_selection = False
+        parallel=True, feature_selection=False
 ):
     """Evaluate classifiers using k-fold cross-validation.
      Args:
@@ -56,6 +62,10 @@ def evaluate_classifiers(
         X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
         y_train, y_test = y[train_index], y[test_index]
 
+        # if set(y_train).difference(set(y_test)) is not {}:
+        #     print(clf, y_train, y_test, set(y_train).difference(set(y_test)))
+        #     raise Exception("Zbiór testowy nie zawiera klasy ze zbioru treningowego")
+
         scaler = MinMaxScaler()
         scaler.fit(X_train, y_train)
         X_train = scaler.transform(X_train)
@@ -67,7 +77,9 @@ def evaluate_classifiers(
         y_test = label_encoder.transform(y_test)
         y_encoded = label_encoder.transform(y)
 
-
+        # if set(y_train).difference(set(y_test)) is not {}:
+        #     # print(clf, y_train, y_test, set(y_train).difference(set(y_test)))
+        #     raise Exception(f"Zbiór testowy nie zawiera klasy ze zbioru treningowego {y_test} {y_train} {set(y_train).difference(set(y_test))}")
 
         # if feature_selection:
         #     # Perform feature selection
@@ -96,13 +108,14 @@ def evaluate_classifiers(
         # Make predictions
         y_pred = clf_.predict(X_test)
 
+        # warnings.simplefilter("error")
 
         try:
             y_pred_proba = clf_.predict_proba(X_test)
         except AttributeError:
             y_pred_scores = clf_.decision_function(X_test)
             y_pred_proba = softmax(y_pred_scores, axis=1)
-
+        # try:
         # Calculate evaluation metrics
         metrics = {
             "accuracy": accuracy_score(y_test, y_pred),
@@ -111,6 +124,9 @@ def evaluate_classifiers(
                 y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y_encoded)
             ),
         }
+        # except:
+        #     print(clf_, y_pred, y_test)
+        #     print(set(y_train).difference(set(y_test)))
         try:
             metrics["losses"] = clf_.log_losses.__str__()
         except AttributeError:
@@ -127,6 +143,8 @@ def evaluate_classifiers(
             metrics[f"precision_{average}"] = precision
             metrics[f"recall_{average}"] = recall
             metrics[f"f1_score_{average}"] = f1
+
+        # warnings.simplefilter("ignore")
 
         return metrics
 
@@ -161,7 +179,7 @@ def evaluate_classifiers(
     f1_score_mac = [result["f1_score_macro"] for result in results]
     # f1_score_wgt = [result['f1_score_weighted'] for result in results]
     auc = [result["auc"] for result in results]
-    log_loss = {index:result["losses"] for index, result in enumerate(results)}
+    log_loss = {index: result["losses"] for index, result in enumerate(results)}
 
     return {
         "name": name,
