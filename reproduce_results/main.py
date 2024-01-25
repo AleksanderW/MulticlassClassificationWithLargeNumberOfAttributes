@@ -64,7 +64,7 @@ for step, n_split, random_state in product(steps, n_splits, random_states):
     #         ALG_aggregations, ALG_amount_of_subtables, ALG_orders, ALG_split_variant
     #     )
     # ]
-
+    ####
     clfs_loop += [
         (
             PomyslAlgorithm(
@@ -102,6 +102,7 @@ for step, n_split, random_state in product(steps, n_splits, random_states):
         )
         for agg, order in product(ALG_aggregations, ALG_orders)
     ]
+    ####
     # clfs_loop += [
     #     (
     #         PomyslStackingAlgorithm(

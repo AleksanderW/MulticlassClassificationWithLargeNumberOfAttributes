@@ -24,6 +24,9 @@ n_splits = [
     5
 ]
 
+external_shuffles = 5
+train_size = 0.9
+
 parallel_evaluation = True
 
 random_states = [
@@ -128,7 +131,7 @@ ALG_models = [
     [
         RandomForestClassifier(n_estimators=10, random_state=42, n_jobs=-1),
         RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1),
-        RandomForestClassifier(n_estimators=100,random_state=42, n_jobs=-1),
+        RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1),
     ],
     [
         MLPClassifier(hidden_layer_sizes=(100,), max_iter=2000, random_state=42),

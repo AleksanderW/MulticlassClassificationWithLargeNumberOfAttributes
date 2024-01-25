@@ -8,14 +8,18 @@ import pandas as pd
 from joblib import Parallel, delayed
 from scipy.special import softmax
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     balanced_accuracy_score,
     accuracy_score,
     precision_recall_fscore_support,
     roc_auc_score,
 )
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.utils import shuffle
+
+from algorithms.Settings import external_shuffles, random_states, train_size
 
 warnings.filterwarnings("ignore",
                         message="The least populated class in y has only 4 members, which is less than n_splits=5.",
@@ -48,53 +52,16 @@ def evaluate_classifiers(
     )
     X = data.iloc[:, :-1].set_index("sample_id")
     y = data.iloc[:, -1].values
+    y = LabelEncoder().fit_transform(y)
 
-    def evaluate_fold(iteration, train_index, test_index, feature_selection):
-        """Evaluate a single fold of cross-validation.
-        Args:
-            iteration (int): Iteration number.
-            train_index (array): Indices of training samples.
-            test_index (array): Indices of test samples.
-        Returns:
-            dict: Dictionary of evaluation metrics.
-        """
-        # Preprocess the data
-        X_train, X_test = X.iloc[train_index, :], X.iloc[test_index, :]
-        y_train, y_test = y[train_index], y[test_index]
-
+    def evaluate_fold(iteration, X_train, X_test, y_train, y_test, feature_selection):
         # if set(y_train).difference(set(y_test)) is not {}:
         #     print(clf, y_train, y_test, set(y_train).difference(set(y_test)))
         #     raise Exception("Zbiór testowy nie zawiera klasy ze zbioru treningowego")
-
         scaler = MinMaxScaler()
-        scaler.fit(X_train, y_train)
-        X_train = scaler.transform(X_train)
+        X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
 
-        label_encoder = LabelEncoder()
-        label_encoder.fit(y_train)
-        y_train = label_encoder.transform(y_train)
-        y_test = label_encoder.transform(y_test)
-        y_encoded = label_encoder.transform(y)
-
-        # if set(y_train).difference(set(y_test)) is not {}:
-        #     # print(clf, y_train, y_test, set(y_train).difference(set(y_test)))
-        #     raise Exception(f"Zbiór testowy nie zawiera klasy ze zbioru treningowego {y_test} {y_train} {set(y_train).difference(set(y_test))}")
-
-        # if feature_selection:
-        #     # Perform feature selection
-        #     if selector == "RFECV" or selector == "RFE":
-        #         feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-        #                                                      f"{dataset}_{random_state}_{step}_{iteration}.sav")).support_
-        #     elif selector == "StabilitySelection":
-        #         feature_selection = joblib.load(os.path.join("..", ".cache", f"{selector}_models",
-        #                                                      f"{dataset}_{random_state}_{iteration}.sav")).get_support(
-        #             indices=False)
-        #     # Preprocess the test data
-        #     X_train = X_train[:, feature_selection]
-
-        #     X_test = X_test_scaled[:, feature_selection]
-        # Set classifier parameters
         if "dataset" in clf.get_params():
             clf.dataset = dataset
         if "iteration" in clf.get_params():
@@ -121,7 +88,7 @@ def evaluate_classifiers(
             "accuracy": accuracy_score(y_test, y_pred),
             "balanced_accuracy": balanced_accuracy_score(y_test, y_pred),
             "auc": roc_auc_score(
-                y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y_encoded)
+                y_test, y_pred_proba, multi_class="ovo", labels=np.unique(y)
             ),
         }
         # except:
@@ -145,27 +112,24 @@ def evaluate_classifiers(
             metrics[f"f1_score_{average}"] = f1
 
         # warnings.simplefilter("ignore")
-
         return metrics
 
+    ###################
+    np.random.seed(random_state)
+    random_seeds = np.random.randint(0, 2**31, external_shuffles)
     if parallel:
-        results = Parallel(n_jobs=-1)(
-            delayed(evaluate_fold)(iteration, train_index, test_index, feature_selection)
-            for iteration, (train_index, test_index) in enumerate(
-                StratifiedKFold(
-                    n_splits=n_splits, random_state=random_state, shuffle=True
-                ).split(X, y)
-            )
+        results = joblib.Parallel(n_jobs=-1)(
+            joblib.delayed(lambda seed: evaluate_fold(seed, *train_test_split(X, y, train_size=train_size, shuffle=True,
+                                                                              random_state=seed, stratify=y),
+                                                      feature_selection))(seed)
+            for seed in random_seeds
         )
     else:
-        results = [
-            evaluate_fold(iteration, train_index, test_index, feature_selection)
-            for iteration, (train_index, test_index) in enumerate(
-                StratifiedKFold(
-                    n_splits=n_splits, random_state=random_state, shuffle=True
-                ).split(X, y)
-            )
-        ]
+        results = [evaluate_fold(seed, *train_test_split(X, y, train_size=train_size, shuffle=True,
+                                                         random_state=seed, stratify=y),
+                                 feature_selection)
+                   for seed in random_seeds]
+
 
     accuracy = [result["accuracy"] for result in results]
     balanced_accuracy = [result["balanced_accuracy"] for result in results]
