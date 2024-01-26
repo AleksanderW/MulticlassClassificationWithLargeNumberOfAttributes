@@ -25,6 +25,10 @@ warnings.filterwarnings("ignore",
                         message="The least populated class in y has only 4 members, which is less than n_splits=5.",
                         append=True)
 
+# Funkcja która zwraca indexy wierszy zamiast tablic tak jak train_test_split
+def custom_train_test_split(X, y, train_size=0.8, shuffle=True, random_state=None, stratify=None):
+    train_indices, test_indices = train_test_split(range(len(X)), train_size=train_size, shuffle=shuffle, random_state=random_state, stratify=stratify)
+    return train_indices, test_indices
 
 # TODO ADD graphs showing log_loss in crossvalidation (SSH DATASET)
 # W wersji sklearn 1.4.0 ClassifierMixin wymusza posiadanie metody fit? https://scikit-learn.org/stable/modules/generated/sklearn.base.ClassifierMixin.html#sklearn-base-classifiermixin
@@ -118,6 +122,16 @@ def evaluate_classifiers(
     np.random.seed(random_state)
     random.seed(random_state)
     random_seeds = [random.randint(0, 2 ** 32 - 1) for _ in range(5)]
+
+    # Check Test sets diferences
+    evaluate_fold_parameters = [(seed, *custom_train_test_split(X, y, train_size=train_size, shuffle=True,
+                                                        random_state=seed, stratify=y)) for seed in random_seeds]
+    number_of_test_samples = 0
+    unique_test_data = set()
+    for _, train_index, test_index in evaluate_fold_parameters:
+        number_of_test_samples+= len(test_index)
+        unique_test_data = unique_test_data.union(set(test_index))
+    print(dataset,clf, "unikatowość:" ,len(unique_test_data)/number_of_test_samples)
 
     if parallel:
         results = joblib.Parallel(n_jobs=-1)(
