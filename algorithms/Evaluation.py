@@ -131,7 +131,7 @@ def evaluate_classifiers(
     for _, train_index, test_index in evaluate_fold_parameters:
         number_of_test_samples+= len(test_index)
         unique_test_data = unique_test_data.union(set(test_index))
-    print(dataset,clf, "unikatowość:" ,len(unique_test_data)/number_of_test_samples)
+    print(dataset,clf, "unikatowość:" ,len(unique_test_data)/number_of_test_samples, "próbek:", number_of_test_samples)
 
     if parallel:
         results = joblib.Parallel(n_jobs=-1)(
