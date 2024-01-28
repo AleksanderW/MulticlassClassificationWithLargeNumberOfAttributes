@@ -1,0 +1,38 @@
+Dataset name: ALL_GSE13425, Amount Of Classes: (7, 'Distribution: ', [0.232, 0.232, 0.232, 0.189, 0.068, 0.026, 0.021])
+Class: TEL-AML1, Count: 44, Distribution: 0.232
+Class: hyperdiploid, Count: 44, Distribution: 0.232
+Class: pre-BALL, Count: 44, Distribution: 0.232
+Class: T-ALL, Count: 36, Distribution: 0.189
+Class: E2A, Count: 13, Distribution: 0.068
+Class: BCR-ABL, Count: 5, Distribution: 0.026
+Class: MLL, Count: 4, Distribution: 0.021
+
+Dataset name: BTu_GSE4290, Amount Of Classes: (4, 'Distribution: ', [0.45, 0.278, 0.144, 0.128])
+Class: glioblastoma, Count: 81, Distribution: 0.45
+Class: oligodendroglioma, Count: 50, Distribution: 0.278
+Class: astrocytoma, Count: 26, Distribution: 0.144
+Class: non-tumor, Count: 23, Distribution: 0.128
+
+Dataset name: HeC_GSE14323, Amount Of Classes: (4, 'Distribution: ', [0.379, 0.331, 0.153, 0.137])
+Class: HCC, Count: 47, Distribution: 0.379
+Class: cirrhosis, Count: 41, Distribution: 0.331
+Class: Normal, Count: 19, Distribution: 0.153
+Class: cirrhosisHCC, Count: 17, Distribution: 0.137
+
+Dataset name: HFF_GSE5406, Amount Of Classes: (3, 'Distribution: ', [0.514, 0.41, 0.076])
+Class: ischemic_cardiomyopathy, Count: 108, Distribution: 0.514
+Class: idiopathic_cardiomyopathy, Count: 86, Distribution: 0.41
+Class: normal, Count: 16, Distribution: 0.076
+
+Dataset name: SPs_GSE13355, Amount Of Classes: (3, 'Distribution: ', [0.356, 0.322, 0.322])
+Class: normal, Count: 64, Distribution: 0.356
+Class: uninvolved, Count: 58, Distribution: 0.322
+Class: involved, Count: 58, Distribution: 0.322
+
+Dataset name: SSh_GSE13904, Amount Of Classes: (5, 'Distribution: ', [0.467, 0.229, 0.119, 0.106, 0.079])
+Class: Septic_Shock, Count: 106, Distribution: 0.467
+Class: Sepsis, Count: 52, Distribution: 0.229
+Class: SIRS, Count: 27, Distribution: 0.119
+Class: SIRS_resolved, Count: 24, Distribution: 0.106
+Class: Controls, Count: 18, Distribution: 0.079
+
