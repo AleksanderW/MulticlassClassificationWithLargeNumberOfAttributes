@@ -1,0 +1,12 @@
+\begin{tabular}{lllll}
+\toprule
+{} & Dataset & Samples &  Genes &          Classes (\& Class distribution) \\
+\midrule
+0 &     ALL &     190 &  22277 &  7(0.23 0.23 0.23 0.19 0.07 0.03 0.02 ) \\
+1 &     BTu &     180 &  54613 &                 4(0.45 0.28 0.14 0.13 ) \\
+2 &     HeC &     124 &  22277 &                 4(0.38 0.33 0.15 0.14 ) \\
+3 &     HFF &     210 &  22283 &                      3(0.51 0.41 0.08 ) \\
+4 &     SPs &     180 &  54675 &                      3(0.36 0.32 0.32 ) \\
+5 &     SSh &     227 &  54675 &            5(0.47 0.23 0.12 0.11 0.08 ) \\
+\bottomrule
+\end{tabular}

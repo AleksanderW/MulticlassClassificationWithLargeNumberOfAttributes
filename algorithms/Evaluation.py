@@ -21,9 +21,9 @@ from sklearn.utils import shuffle
 
 from algorithms.Settings import external_shuffles, random_states, train_size
 
-warnings.filterwarnings("ignore",
-                        message="The least populated class in y has only 4 members, which is less than n_splits=5.",
-                        append=True)
+# warnings.filterwarnings("ignore",
+#                         message="The least populated class in y has only 4 members, which is less than n_splits=5.",
+#                         append=True)
 
 # Funkcja która zwraca indexy wierszy zamiast tablic tak jak train_test_split
 def custom_train_test_split(X, y, train_size=0.8, shuffle=True, random_state=None, stratify=None):
